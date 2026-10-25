@@ -142,6 +142,27 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 .ghint svg{animation:nudge 1.6s ease-in-out infinite}
 .ghint.gone,.track.still+.ghint{opacity:0}
 .gdots{display:none}
+/* Upright phones scroll up and down instead of sideways. A collection is a feed: the title, then each photo full width, then a card
+   leading on to the next collection. The All wall becomes two columns. Both scroll under the frosted header. Larger screens are unchanged. */
+#vSpread.feed,#vGrid.vert{top:0}
+#vSpread.feed .pages{flex-direction:column;overflow-x:hidden;overflow-y:auto;scroll-snap-type:none;touch-action:pan-y;overscroll-behavior:contain;cursor:auto;
+  bottom:0!important;padding-top:calc(var(--head-h) + env(safe-area-inset-top,0px));box-sizing:border-box}
+#vSpread.feed .pg{flex:none;height:auto;overflow:visible;scroll-snap-align:none;padding:0 max(20px,env(safe-area-inset-right,0px)) 28px max(20px,env(safe-area-inset-left,0px))}
+#vSpread.feed .opener{padding-top:clamp(28px,8vh,72px);padding-bottom:clamp(36px,7vh,64px)}
+#vSpread.feed .ph{touch-action:pan-y}#vSpread.feed .ph.zoomed{touch-action:none}
+#vSpread.feed .fbot{display:none}
+#vSpread.feed .opener .go svg{animation-name:nudge-y}
+@keyframes nudge-y{50%{transform:translateY(6px)}}
+#vGrid.vert .room{overflow-x:hidden;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;cursor:auto;bottom:0!important;padding-top:calc(var(--head-h) + env(safe-area-inset-top,0px));box-sizing:border-box}
+#vGrid.vert .wall{flex-direction:row;align-items:flex-start;justify-content:flex-start;height:auto;width:auto;padding:12px max(20px,env(safe-area-inset-right,0px)) 0 max(20px,env(safe-area-inset-left,0px))}
+#vGrid.vert .col{display:flex;flex-direction:column;gap:var(--gap);flex:1 1 0;min-width:0}
+#vGrid.vert :is(.track,.ghint,.gdots,.arrow){display:none!important}
+/* The card at the end of a feed or the wall: on to the next collection */
+.nextc{appearance:none;border:0;background:none;color:var(--ink);width:100%;display:flex;flex-direction:column;align-items:center;gap:16px;cursor:pointer;
+  padding:clamp(48px,10vh,88px) 20px calc(env(safe-area-inset-bottom,0px) + clamp(56px,10vh,96px));text-align:center}
+.nextc .eyebrow::after{content:"";width:28px;height:1px;background:currentColor}
+.nextc b{font:400 clamp(40px,12vw,56px)/1 var(--serif);letter-spacing:-.02em}
+.nextc .go{color:var(--ink-2)}
 /* Phones: the wall drops its rail and hint for the page control used in collections, one dot per screen of photos */
 @media (max-width:760px) and (min-height:501px){
   .gdots{display:flex}
@@ -324,7 +345,7 @@ function go(s, mode, quiet) {
   document.body.dataset.v = s.v;
   Object.entries(views).forEach(([k, el]) => el.hidden = k !== s.v);
   stopGlide();
-  if (s.v === 'grid') { hang(); if (s.at != null || s.x != null) { gStop(); room.scrollLeft = s.x ?? (s.at === 'end' ? room.scrollWidth : 0); } syncGrid(); room.focus({ preventScroll: true }); peek(); }
+  if (s.v === 'grid') { hang(); if (gVert) room.scrollTop = s.y ?? (s.at === 'end' ? room.scrollHeight : 0); else if (s.at != null || s.x != null) { gStop(); room.scrollLeft = s.x ?? (s.at === 'end' ? room.scrollWidth : 0); } syncGrid(); room.focus({ preventScroll: true }); peek(); }
   if (s.v === 'spread') openSpread(s.c < 0 ? ALL : COLS[s.c], s.at);
   if (!reduce && !quiet && (prev.v !== s.v || prev.c !== s.c)) views[s.v].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
   markTab();
@@ -353,7 +374,7 @@ window.onTheme = t => { syncTheme(t); state.v === 'spread' && fit(); }; syncThem
 // the new theme is stored first and applied before the page paints, so it comes back in the new colours exactly where you were.
 const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const here = () => {
-  if (state.v === 'grid') return { v: 'grid', x: room.scrollLeft };
+  if (state.v === 'grid') return { v: 'grid', x: room.scrollLeft, y: room.scrollTop };
   const f = pagesEl.children[idx()]?.querySelector('.fr');
   return { v: 'spread', c: state.c, at: f ? +f.dataset.k : undefined };
 };
@@ -374,9 +395,22 @@ const tiles = P.map((p, i) => {
   b.onclick = e => { if (gMoved) return e.preventDefault(); go({ v: 'spread', c: -1, at: i }); };
   return b;
 });
+let gVert = false;
+const gFoot = document.createElement('div');
 function hang() {
   if ($('vGrid').hidden) return;
+  gVert = phone.matches; views.grid.classList.toggle('vert', gVert);
   const cs = getComputedStyle(wall), gap = parseFloat(cs.getPropertyValue('--gap'));
+  // Upright phones: two columns, each photo at its own proportions, dropped into the shorter column; then the next-collection card
+  if (gVert) {
+    const cw = (room.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - gap) / 2;
+    const cols = [0, 1].map(() => { const c = document.createElement('div'); c.className = 'col'; c.h = 0; return c; });
+    P.forEach((p, i) => { const h = cw * p.h / p.w, c = cols[0].h <= cols[1].h ? cols[0] : cols[1]; tiles[i].style.width = cw + 'px'; tiles[i].style.height = h + 'px'; c.appendChild(tiles[i]); c.h += h + gap; });
+    wall.replaceChildren(...cols);
+    gFoot.replaceChildren(nextCard({ v: 'spread', c: 0 })); room.appendChild(gFoot);
+    return;
+  }
+  gFoot.remove();
   // Rows sized for a comfortable tile height (about 300px, less on phones); one row on short landscape screens.
   // If everything would fit without scrolling, drop a row so there's still a wall to slide through.
   // Tiles never grow past maxH; spare height becomes space above and below the wall, which is centred.
@@ -398,12 +432,12 @@ $('ghintT').textContent = coarse ? 'Swipe' : 'Drag or scroll';
 // The first time the wall opens on a touch screen, it slides a little and back to show it moves sideways
 let peeked = false;
 function peek() {
-  if (peeked || !coarse || reduce) return; peeked = true;
+  if (peeked || !coarse || reduce || gVert) return; peeked = true;
   setTimeout(() => { if (state.v !== 'grid' || room.scrollLeft > 4) return; glideBy(56); setTimeout(() => state.v === 'grid' && glideBy(-56), 520); }, 650);
 }
 let gScr = -1;
 function syncGrid() {
-  if (state.v !== 'grid') return;
+  if (state.v !== 'grid' || gVert) return;
   const max = room.scrollWidth - room.clientWidth, L0 = room.scrollLeft, R0 = L0 + room.clientWidth;
   const sc = $('gdots').firstChild.children.length, si = L0 >= max - 2 ? sc - 1 : Math.min(sc - 1, Math.round(L0 / room.clientWidth));
   if (si !== gScr) { gScr = si; paintDots($('gdots'), si, sc); }
@@ -430,6 +464,7 @@ room.addEventListener('dragstart', e => e.preventDefault());
 let rT = null;
 room.addEventListener('touchstart', e => { const t = e.touches[0]; rT = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, atL: gAt(-1), atR: gAt(1) } : null; }, { passive: true });
 room.addEventListener('touchend', e => {
+  if (gVert) return;
   const t = e.changedTouches[0], s0 = rT; rT = null; if (!s0) return;
   const dx = t.clientX - s0.x, dy = t.clientY - s0.y;
   if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
@@ -455,7 +490,7 @@ addEventListener('pointerup', () => {
   setTimeout(() => gMoved = false, 0);
 });
 room.addEventListener('wheel', e => {
-  if (e.ctrlKey) return;
+  if (e.ctrlKey || gVert) return;
   // A notched mouse wheel jumps in big steps, so glide between them. Trackpads and smooth wheels already send fine, momentum-carrying deltas:
   // sideways ones are left to the browser's own scrolling, and up/down ones are turned sideways one to one, with no extra easing.
   const notched = e.deltaMode !== 0 || (Math.abs(e.wheelDelta) >= 120 && e.wheelDelta % 120 === 0);
@@ -512,20 +547,24 @@ let cur = null, pages = [], zooms = [];
 // Group photos into pages: a landscape photo gets a page to itself; on wide screens two portraits share one.
 // Two portraits share a page only when the screen is wide enough to show both at full height.
 // With a lead title page, photo 1 sits beside the title on its own and grouping starts from photo 2.
-function compose(items, lead) {
+function compose(items, lead, feed) {
   const W = innerWidth * .92 - 40, H = Math.max(200, innerHeight - (innerHeight <= 500 ? 52 : innerWidth <= 760 ? 56 : 60) - 56 - capH() - innerHeight * .04), out = lead ? [[0]] : [];
   for (let i = lead ? 1 : 0; i < items.length; i++) {
     const p = items[i], q = items[i + 1];
-    if (p.h > p.w && q && q.h > q.w && (p.w / p.h + q.w / q.h) * H <= W) { out.push([i, i + 1]); i++; } else out.push([i]);
+    if (!feed && p.h > p.w && q && q.h > q.w && (p.w / p.h + q.w / q.h) * H <= W) { out.push([i, i + 1]); i++; } else out.push([i]);
   }
   return out;
 }
 // Large screens (not phones or short landscape) put the first photo on the title page, so it's on screen the moment a collection opens
 const leadOK = () => !phone.matches && innerWidth >= 900 && innerHeight > 500;
 let lead = false;
+// Upright phones read a collection top to bottom as a feed
+const feedOK = () => phone.matches;
+let feed = false;
 function render() {
-  const items = cur.items; lead = leadOK() && items.length > 0; pages = compose(items, lead); zooms = [];
-  const intro = `<div class="op-tx">${cur === ALL ? '' : '<div class="eyebrow mono op-k">Collection</div>'}<h2>${cur.title}</h2><p>${items.length} photographs${cur.blurb ? `<br>${cur.blurb}` : ''}</p><span class="go mono">Drag, swipe or click${lead ? ' for more' : ''} <svg width="28" height="12" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></span></div>`;
+  const items = cur.items; lead = leadOK() && items.length > 0; feed = feedOK(); pages = compose(items, lead, feed); zooms = [];
+  pagesEl.classList.toggle('feed', feed); views.spread.classList.toggle('feed', feed);
+  const intro = `<div class="op-tx">${cur === ALL ? '' : '<div class="eyebrow mono op-k">Collection</div>'}<h2>${cur.title}</h2><p>${items.length} photographs${cur.blurb ? `<br>${cur.blurb}` : ''}</p><span class="go mono">${feed ? `Scroll <svg width="12" height="24" viewBox="0 0 10 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5 1v19M1 16l4 4 4-4"/></svg>` : `Drag, swipe or click${lead ? ' for more' : ''} <svg width="28" height="12" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg>`}</span></div>`;
   pagesEl.innerHTML = lead ? '' : `<section class="pg opener">${intro}</section>`;
   pages.forEach((group, gi) => {
     const s = document.createElement('section'); s.className = lead && !gi ? 'pg opener lead' : 'pg';
@@ -543,11 +582,20 @@ function render() {
     });
     pagesEl.appendChild(s);
   });
+  // A feed ends with a card leading on to the next collection
+  const nx = feed && nextOf();
+  if (nx) { const end = document.createElement('section'); end.className = 'pg nextp'; end.appendChild(nextCard(nx)); pagesEl.appendChild(end); }
   $('dots').innerHTML = `<span class="pc">${[...pagesEl.children].map((_, i) => `<button class="dot" aria-label="Page ${i + 1}"><i></i></button>`).join('')}</span>`;
   $('dots').querySelectorAll('.dot').forEach((d, i) => d.onclick = () => goTo(i));
   // Phones: a tap on the capsule steps toward that side of the current dot
   $('dots').firstChild.onclick = e => { if (!phone.matches) return; const c = $('dots').querySelector('.dot[aria-current="true"]').getBoundingClientRect(); goTo(aim() + (e.clientX < c.left + c.width / 2 ? -1 : 1)); };
   synced = -1; fit();
+}
+// "Next collection" card for the end of a feed or of the vertical wall
+function nextCard(s) {
+  const b = document.createElement('button'); b.className = 'nextc';
+  b.innerHTML = `<span class="eyebrow mono">Next collection</span><b>${s.v === 'grid' ? 'All photographs' : COLS[s.c].title}</b><span class="go mono">Continue <svg width="12" height="24" viewBox="0 0 10 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5 1v19M1 16l4 4 4-4"/></svg></span>`;
+  b.onclick = () => { haptic(5); turnCol(1); }; return b;
 }
 // Room kept under each photo for its caption: none on upright phones (no caption), three lines where photos are narrow, two otherwise.
 const capH = () => innerHeight <= 500 ? 44 : phone.matches ? 0 : innerWidth < 700 ? 76 : 56;
@@ -560,13 +608,18 @@ function fit() {
     const half = frs[0].parentElement !== s && frs[0].parentElement, hs = half && getComputedStyle(half);
     const W = half ? half.clientWidth - parseFloat(hs.paddingLeft) - parseFloat(hs.paddingRight)
       : pagesEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - gap * (frs.length - 1);
-    const H = pagesEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - capH();
+    const H = feed ? (pagesEl.clientHeight - parseFloat(getComputedStyle(pagesEl).paddingTop)) * .8
+      : pagesEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - capH();
     const sum = frs.reduce((a, f) => { const p = cur.items[+f.dataset.k]; return a + p.w / p.h; }, 0);
     const h = Math.min(H, W / sum);
     frs.forEach(f => { const p = cur.items[+f.dataset.k], box = f.querySelector('.ph'); box.style.height = h + 'px'; box.style.width = (h * p.w / p.h) + 'px'; f.style.width = box.style.width; });
   });
 }
-const idx = () => Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+const feedTop = () => parseFloat(getComputedStyle(pagesEl).paddingTop) || 0;
+const feedIdx = () => { const y = pagesEl.scrollTop + feedTop() + (pagesEl.clientHeight - feedTop()) * .4; let k = 0; [...pagesEl.children].forEach((c, j) => { if (c.offsetTop <= y) k = j; }); return k; };
+const idx = () => feed ? feedIdx() : Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+// Scroll a feed so page i sits just under the header
+const feedTo = (i, smooth) => { const c = pagesEl.children[i]; pagesEl.scrollTo({ top: i && c ? c.offsetTop - feedTop() : 0, behavior: smooth && !reduce ? 'smooth' : 'auto' }); };
 // Mark dot i of n current. Upright phones show a window of seven dots around it; the outer two shrink when more lie beyond.
 function paintDots(el, i, n) {
   const N = 7, s = Math.max(0, Math.min(n - N, i - 3)), e = Math.min(n, s + N), ph = phone.matches;
@@ -619,6 +672,11 @@ const prevOf = () => state.v === 'grid' ? lastOf(COLS.length - 1) : state.v === 
 // Turn the page: a copy of the current page slides out while the new collection slides in behind it, like any other swipe
 function turnCol(dir) {
   const s = dir > 0 ? nextOf() : prevOf(); if (!s) return false;
+  if (phone.matches) {
+    go(s, undefined, true);
+    if (!reduce) views[s.v].animate([{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 460, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    return true;
+  }
   const fromGrid = state.v === 'grid', src = fromGrid ? room : pagesEl, r = src.getBoundingClientRect(), keep = room.scrollLeft;
   const old = fromGrid ? room.cloneNode(true) : pagesEl.children[idx()]?.cloneNode(true);
   let ghost = null;
@@ -639,6 +697,7 @@ function turnCol(dir) {
 }
 function goTo(i, v = 0) {
   const n = pagesEl.children.length, W = pagesEl.clientWidth;
+  if (feed) { feedTo(Math.max(0, Math.min(n - 1, i)), true); return; }
   if (i > n - 1 && pagesEl.scrollLeft >= (n - 1) * W - 2 && turnCol(1)) return;
   if (i < 0 && pagesEl.scrollLeft <= 2 && turnCol(-1)) return;
   i = Math.max(0, Math.min(n - 1, i));
@@ -671,6 +730,7 @@ $('prev').onclick = () => goTo(aim() - 1); $('next').onclick = () => goTo(aim() 
 let tStart = null;
 pagesEl.addEventListener('touchstart', e => { stopGlide(); pend = null; const t = e.touches[0]; tStart = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, i: idx(), n: pagesEl.children.length } : null; }, { passive: true });
 pagesEl.addEventListener('touchend', e => {
+  if (feed) return;
   const t = e.changedTouches[0], s0 = tStart; tStart = null;
   if (!s0 || zooms.some(z => z.zoomed)) return;
   const dx = t.clientX - s0.x, dy = t.clientY - s0.y;
@@ -688,10 +748,12 @@ function zone(x) {
 }
 let dragJust = false;
 pagesEl.addEventListener('click', e => {
+  if (feed) return;
   if (dragJust || zooms.some(z => z.zoomed) || e.target.closest('.fr')) return;
   const z = zone(e.clientX); if (z) goTo(aim() + z);
 });
 pagesEl.addEventListener('mousemove', e => {
+  if (feed) return;
   if (fd) return; const z = e.target.closest('.fr') ? 0 : zone(e.clientX), i = aim(), n = pagesEl.children.length;
   const back = z < 0 && (i > 0 || !!prevOf()), fwd = z > 0 && (i < n - 1 || !!nextOf());
   pagesEl.style.cursor = back || fwd ? 'pointer' : '';
@@ -703,7 +765,8 @@ pagesEl.addEventListener('mouseleave', cool); $('prev').addEventListener('mousel
 function openSpread(c, photoIndex) {
   cur = c; render();
   const pi = photoIndex != null ? pages.findIndex(g => g.includes(photoIndex)) + (lead ? 0 : 1) : 0;
-  pagesEl.style.scrollSnapType = 'none'; pagesEl.scrollLeft = pi * pagesEl.clientWidth; pagesEl.style.scrollSnapType = '';
+  if (feed) feedTo(pi);
+  else { pagesEl.style.scrollSnapType = 'none'; pagesEl.scrollLeft = pi * pagesEl.clientWidth; pagesEl.style.scrollSnapType = ''; }
   lastI = pi; syncFocus(); pagesEl.focus({ preventScroll: true });
 }
 
@@ -735,6 +798,7 @@ addEventListener('pointerup', e => {
 // momentum tail can't trigger a second turn mid-glide; a fresh, harder push starts a new one.
 let wLast = 0, wAcc = 0, wArmed = true, wFired = 0, wPrev = 0;
 pagesEl.addEventListener('wheel', e => {
+  if (feed) return;
   if (e.ctrlKey) return; e.preventDefault();
   const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX, now = performance.now();
   if (now - wLast > 180 || (now - wFired > 450 && Math.abs(d) > Math.abs(wPrev) * 1.6 && Math.abs(d) > 24)) { wArmed = true; wAcc = 0; }
@@ -756,7 +820,7 @@ addEventListener('keydown', e => {
 addEventListener('resize', () => {
   if (!phone.matches) setMenu(false);
   if (state.v === 'grid') { hang(); syncGrid(); }
-  if (state.v === 'spread') { stopGlide(); const i = idx(); const was = pages.length; const n = compose(cur.items, leadOK()).length; if (n !== was || leadOK() !== lead) render(); else fit(); pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; synced = -1; syncFocus(); }
+  if (state.v === 'spread') { stopGlide(); const i = idx(); const was = pages.length; const n = compose(cur.items, leadOK(), feedOK()).length; if (n !== was || leadOK() !== lead || feedOK() !== feed) render(); else fit(); if (feed) feedTo(Math.min(i, pagesEl.children.length - 1)); else pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; synced = -1; syncFocus(); }
   markTab();
 });
 document.fonts && document.fonts.ready.then(markTab);
