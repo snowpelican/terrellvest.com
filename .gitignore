@@ -36,3 +36,10 @@ highlight
 
 _drafts
 .wrangler
+
+# Source photos for the gallery (camera RAW files and their extracted JPEGs); only the optimized output is committed
+_src/photography/raw
+_src/photography/src
+# optimize.py writes here; the copies in _dist/photography are the ones committed
+_src/photography/p
+_src/photography/photos.js

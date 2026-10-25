@@ -3,25 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}.draft{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:50;pointer-events:none;font:500 9px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2);background:#ffffffd9;border:1px solid var(--line);border-radius:999px;padding:6px 7px 6px 9px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}.draft{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:50;pointer-events:none;font:500 9px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2);background:var(--draft-bg);border:1px solid var(--line);border-radius:999px;padding:6px 7px 6px 9px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 </style>
 <title>Terrell V. Photography</title>
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" id="themeColor">
+<meta name="color-scheme" content="light dark" id="colorScheme">
+<script>
+// Theme: the visitor's saved choice, else the device's light/dark setting (followed live if it changes).
+// Runs before the page paints, so there's no flash of the wrong theme.
+(() => {
+  const q = matchMedia('(prefers-color-scheme: dark)'), root = document.documentElement;
+  let saved = null; try { saved = localStorage.getItem('theme'); } catch (e) {}
+  // Safari's own bars follow three things: the page's colour scheme (this meta, plus color-scheme in the CSS), the page background,
+  // and theme-color on older iOS. Pin the meta to the site's theme, not "light dark", or Safari keeps following the phone's setting.
+  // Swapping the theme-color tag for a fresh one, rather than editing it, nudges Safari to re-read its colours without a reload.
+  const apply = t => {
+    root.dataset.theme = t;
+    document.getElementById('colorScheme').content = t;
+    const old = document.getElementById('themeColor'), tc = old.cloneNode(); tc.content = t === 'dark' ? '#111213' : '#ffffff'; old.replaceWith(tc);
+    window.onTheme && window.onTheme(t);
+  };
+  apply(saved || (q.matches ? 'dark' : 'light'));
+  q.addEventListener('change', () => { if (!saved) apply(q.matches ? 'dark' : 'light'); });
+  // Picking the same theme as the device forgets the choice, so the page goes back to following the device
+  window.setTheme = t => { saved = t === (q.matches ? 'dark' : 'light') ? null : t; try { saved ? localStorage.setItem('theme', saved) : localStorage.removeItem('theme'); } catch (e) {} apply(t); };
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: everything is a collection. "All" is a sideways wall of every photo; any other collection opens as snapping, spread-like pages. One header with the imprint and collection tabs ties them together. */
 :root{
+  color-scheme:light;
   --bg:#ffffff; --ink:#151617; --ink-2:#6a6e73; --ink-3:#a3a7ac; --line:#15161714; --soft:#f3f4f5; --rail:#1516171f;
   --serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --head-h:72px; --side:40px;
+  --track:#e8e8eb; --track-i:#9ea1a6; --track-hover:#7f8287; --track-held:#6c6f74; --hot:#e6e7e9; --draft-bg:#ffffffd9;
+  --head-h:60px; --side:40px; --maxw:1320px;
   color-scheme:light;
 }
+/* Dark theme: set by the script in <head> from the device setting (Windows, macOS, iOS, Android) or the header toggle */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111213; --ink:#ececed; --ink-2:#a3a7ac; --ink-3:#6f7378; --line:#ececed1a; --soft:#1c1d1f; --rail:#ececed29;
+  --track:#2a2b2e; --track-i:#6f7378; --track-hover:#8b8f94; --track-held:#a3a7ac; --hot:#2a2b2e; --draft-bg:#111213d9;
+  color-scheme:dark;
+}
+/* Light/dark toggle: shows the moon in light mode and the sun in dark mode */
+.hr{justify-self:end;display:flex;align-items:center;gap:14px}
+.theme{appearance:none;border:0;background:none;padding:0;width:44px;height:44px;margin-right:-12px;display:grid;place-items:center;cursor:pointer;color:var(--ink-2);transition:color .2s}
+@media (hover:hover){.theme:hover{color:var(--ink)}}
+.theme .sun,[data-theme="dark"] .theme .moon{display:none}
+[data-theme="dark"] .theme .sun{display:block}
 @media (max-width:760px){:root{--side:20px}}
-@media (max-width:760px) and (min-height:501px){:root{--head-h:100px}}
+@media (max-width:760px) and (min-height:501px){:root{--head-h:56px}}
 @media (max-height:500px){:root{--head-h:52px;--side:20px;--fbot:40px}}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+/* Safari (iOS 26) tints the status bar and toolbar from the page's colour scheme and root background, not theme-color */
+html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit}
 button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
@@ -31,88 +70,53 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 /* Header: imprint, collection tabs, position */
 .top{position:fixed;left:0;right:0;top:0;z-index:10;height:calc(var(--head-h) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(var(--side),env(safe-area-inset-right,0px)) 0 max(var(--side),env(safe-area-inset-left,0px));
   box-sizing:border-box;background:var(--bg);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:24px}
+/* The header's edges line up with the centred content column on every view */
+.top{padding-left:max(var(--side),env(safe-area-inset-left,0px),calc((100% - var(--maxw)) / 2));padding-right:max(var(--side),env(safe-area-inset-right,0px),calc((100% - var(--maxw)) / 2))}
+/* Frosted header. The glass lives on a pseudo-element and the header itself stays transparent: Safari (iOS 26) tints the status bar
+   from a fixed header's own background colour, and a see-through one comes out white. With none, it uses the page background. */
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.top{background:transparent}.top::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--bg) 85%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5)}}
 .imp{appearance:none;border:0;background:none;padding:4px 0;cursor:pointer;justify-self:start;display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap;color:var(--ink)}
-/* Stamp: signature in script, trade line in spaced mono beneath */
-.sig{font:400 30px/.9 "Pinyon Script",var(--serif);letter-spacing:0;margin-left:-2px}
-.imp small{font:500 7.5px/1 var(--mono);letter-spacing:.42em;text-transform:uppercase;color:var(--ink-2);margin:3px 0 0 3px}
-.tabs{display:flex;gap:26px;position:relative;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.logo{display:block;height:21px;width:auto}.logo-d,[data-theme="dark"] .logo-l{display:none}[data-theme="dark"] .logo-d{display:block}
+.tabs{display:flex;gap:36px;position:relative;overflow-x:auto;scrollbar-width:none;max-width:100%}
 .tabs::-webkit-scrollbar{display:none}
-.tabs button{appearance:none;border:0;background:none;padding:12px 0;cursor:pointer;color:var(--ink-3);white-space:nowrap;transition:color .2s}
-@media (hover:hover){.tabs button:hover{color:var(--ink-2)}}
+.tabs button{appearance:none;border:0;background:none;padding:12px 0;cursor:pointer;font-size:13px;color:var(--ink-2);white-space:nowrap;transition:color .2s}
+@media (hover:hover){.tabs button:hover{color:var(--ink)}}
 .tabs button[aria-selected="true"]{color:var(--ink)}
 .tabs i{position:absolute;left:0;bottom:4px;height:1px;background:var(--ink);transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),opacity .2s;opacity:0}
-@media (max-height:500px){.top{column-gap:18px}.tabs{gap:18px}}
-@media (max-height:500px){.sig{font-size:24px}.imp small{display:none}}
-@media (max-width:760px) and (min-height:501px){.sig{font-size:26px}.imp small{font-size:7px}}
-.count{justify-self:end;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-height:500px){.top{column-gap:18px}.tabs{gap:26px}}
+@media (max-height:500px){.logo{height:18px}}
+@media (max-width:760px) and (min-height:501px){.logo{height:19px}}
+.count{color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Phones: a single "Collections" button opens a sheet listing every collection, in place of the tabs */
+.pick{display:none;appearance:none;border:0;background:none;color:var(--ink);padding:12px 0;cursor:pointer;align-items:center;gap:8px;font-size:12px}
+.pick svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+[data-menu] .pick svg{transform:rotate(180deg)}
+.menu{position:fixed;left:0;right:0;top:calc(var(--head-h) + env(safe-area-inset-top,0px));bottom:0;z-index:9;background:color-mix(in srgb,var(--bg) 94%,transparent);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);opacity:0;visibility:hidden;transition:opacity .22s ease,visibility 0s .22s}
+[data-menu] .menu{opacity:1;visibility:visible;transition:opacity .22s ease}
+.menu-in{display:flex;flex-direction:column;padding:8px max(32px,env(safe-area-inset-right,0px)) 0 max(40px,env(safe-area-inset-left,0px));transform:translateY(-10px);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+[data-menu] .menu-in{transform:none}
+.mi{appearance:none;border:0;border-bottom:1px solid var(--line);background:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:20px 0;color:var(--ink-2);cursor:pointer;text-align:left}
+.mi span{font:400 32px/1.05 var(--serif);letter-spacing:-.015em}
+.mi small{color:var(--ink-3);font-size:11px;font-variant-numeric:tabular-nums}
+.mi[aria-current="true"]{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.menu,.menu-in,.pick svg{transition:none}}
+/* Phones held upright: one quiet row. Logo left, tabs in the middle, the two toggles right.
+   The side margins line up with the iPhone status bar: the logo under the clock, the last icon under the battery.
+   No count or draft badge up top; the photo number moves beside the dots. The tabs give way to the Collections button. */
 @media (max-width:760px) and (min-height:501px){
-  .top{grid-template-columns:1fr auto;grid-template-rows:44px 44px;align-content:center}
-  .tabs{grid-column:1/-1;grid-row:2;margin:0 calc(-1 * var(--side));padding:0 var(--side);gap:22px}
-  .count{grid-row:1;grid-column:2}
+  .count,.draft{display:none}
+  .top{grid-template-columns:auto minmax(0,1fr) auto;column-gap:14px;padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+  .tabs{display:none}
+  .pick{display:inline-flex;justify-self:center}
+  .hr{gap:0}
+  .hr .theme{width:36px;margin-right:0}.hr .theme:last-child{margin-right:-9px}
 }
 .view{position:fixed;left:0;right:0;top:calc(var(--head-h) + env(safe-area-inset-top,0px));bottom:0}
 
-/* Home: one featured collection leads, the rest and the full set sit right below */
-#vHome{overflow-y:auto;overscroll-behavior-y:contain}
-.home{max-width:1320px;margin:0 auto;padding:12px max(var(--side),env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 40px) max(var(--side),env(safe-area-inset-left,0px))}
-.feat{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(260px,1fr);gap:clamp(28px,4.5vw,72px);align-items:end;height:clamp(440px,calc(100dvh - var(--head-h) - 112px),860px)}
-.feat-ph{appearance:none;border:0;padding:0;background:var(--soft);position:relative;overflow:hidden;height:100%;width:100%;cursor:pointer;display:block}
-.feat-ph .kp{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.4s ease}
-.feat-ph .kp.on{opacity:1;z-index:1}
-.feat-ph .kp img{transform:scale(1.05);transition:opacity .45s,transform 8s cubic-bezier(.2,.6,.3,1)}
-.feat-ph .kp.on img{transform:scale(1)}
-.feat-tx{padding-bottom:2px;min-width:0}
 .eyebrow{margin:0;color:var(--ink-2);display:flex;align-items:center;gap:12px}
 .eyebrow::before{content:"";width:28px;height:1px;background:currentColor}
-.feat-t{margin:20px 0 0;font:400 clamp(64px,8.6vw,150px)/.86 var(--serif);letter-spacing:-.035em}
-.feat-b{margin:22px 0 0;color:var(--ink-2);font:400 12px/1.75 var(--mono);max-width:34ch}
-.cta{appearance:none;border:0;background:none;padding:10px 0;margin-top:26px;cursor:pointer;display:inline-flex;align-items:center;gap:12px;color:var(--ink);border-bottom:1px solid var(--ink)}
-.cta svg,.link svg,.card .go svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
-@media (hover:hover){.cta:hover svg,.link:hover svg,.card:hover .go svg{transform:translateX(4px)}}
-.feat-th{display:flex;align-items:center;gap:8px;margin-top:clamp(28px,5vh,56px)}
-.feat-th button{appearance:none;border:0;padding:0;background:none;cursor:pointer;width:52px;height:52px;opacity:.38;transition:opacity .3s}
-.feat-th button.on,.feat-th button:hover{opacity:1}
-.feat-th .kp{width:100%;height:100%}
-.feat-n{margin-left:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.sec{margin:clamp(64px,10vh,104px) 0 24px;display:flex;justify-content:space-between;align-items:baseline;gap:16px;color:var(--ink-2)}
-.link{appearance:none;border:0;background:none;padding:6px 0;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:10px}
-.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px}
-.card{appearance:none;border:0;padding:0;background:none;text-align:left;cursor:pointer;display:block;min-width:0}
-.card .cv{aspect-ratio:4/5;overflow:hidden;background:var(--soft)}
-.card .cv .kp{width:100%;height:100%}
-.card .cv.mos{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;background:none}
-.card .kp img{transition:opacity .45s,transform .7s cubic-bezier(.2,.8,.2,1)}
-@media (hover:hover){.card:hover .kp img{transform:scale(1.035)}}
-.card-m{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:14px}
-.card-m b{font:400 24px/1.1 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-m span{color:var(--ink-2)}
 .go{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
-.foot{margin-top:clamp(72px,12vh,120px);padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;color:var(--ink-3)}
-.foot .sig{font-size:26px;color:var(--ink)}
-@media (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.feat{grid-template-columns:minmax(0,1.25fr) minmax(240px,1fr)}}
-/* Phones: the featured photo runs edge to edge, collections become a swipeable row */
-@media (max-width:700px){
-  .feat{display:block;height:auto}
-  .feat-ph{margin:0 calc(-1 * var(--side));width:calc(100% + 2 * var(--side));height:auto;aspect-ratio:4/5;max-height:calc(100dvh - var(--head-h) - 150px)}
-  .feat-tx{padding-top:26px}
-  .feat-t{margin-top:14px;font-size:clamp(56px,17vw,84px)}
-  .feat-b{margin-top:16px}
-  .feat-th{margin-top:28px}
-  .feat-th button{width:44px;height:44px}
-  .sec{margin-top:64px}
-  .cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--side);margin:0 calc(-1 * var(--side));padding:0 var(--side) 4px;gap:14px;scrollbar-width:none;overscroll-behavior-x:contain}
-  .cards::-webkit-scrollbar{display:none}
-  .card{flex:0 0 min(64vw,280px);scroll-snap-align:start}
-  .card-m b{font-size:21px}
-}
-/* Short landscape screens: photo and text side by side, sized to the screen */
-@media (max-height:500px) and (min-width:560px){
-  .feat{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,1fr);height:calc(100dvh - var(--head-h) - 28px);gap:28px}
-  .feat-ph{margin:0;width:100%;height:100%;aspect-ratio:auto;max-height:none}
-  .feat-t{font-size:min(64px,16vh)}
-  .feat-th{display:none}
-}
-@media (prefers-reduced-motion:reduce){.feat-ph .kp img{transition:opacity .45s;transform:none!important}}
 
 /* All: the sideways wall */
 .room{position:absolute;inset:0 0 calc(env(safe-area-inset-bottom,0px) + 72px) 0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;cursor:grab;user-select:none;-webkit-user-select:none;overscroll-behavior-x:contain}
@@ -121,27 +125,36 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 .room img{-webkit-user-drag:none;pointer-events:none}
 @media (pointer:coarse){.room{cursor:auto}}
 .wall{display:flex;flex-direction:column;justify-content:center;gap:var(--gap);height:100%;box-sizing:border-box;width:max-content;
-  padding:12px max(var(--side),env(safe-area-inset-right,0px)) 12px max(var(--side),env(safe-area-inset-left,0px));--gap:22px}
+  padding:clamp(24px,8vh,96px) max(var(--side),env(safe-area-inset-right,0px)) clamp(24px,8vh,96px) max(var(--side),env(safe-area-inset-left,0px));--gap:28px}
 @media (max-width:600px){.wall{--gap:14px}}
+@media (max-height:500px){.wall{padding-top:12px;padding-bottom:12px}}
 .row{display:flex;gap:var(--gap)}
 .tile{appearance:none;border:0;padding:0;background:none;flex:none;cursor:inherit;display:block}
 .tile .kp{width:100%;height:100%}
 /* Position rail: a short hairline under the wall; the darker part is what's on screen */
 .track{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(-50%);width:min(320px,64vw);padding:14px 0;cursor:pointer;touch-action:none;transition:opacity .3s}
-.track::before{content:"";display:block;height:3px;border-radius:2px;background:#e8e8eb}
-.track i{position:absolute;top:14px;left:0;height:3px;border-radius:2px;background:#9ea1a6;transition:background-color .2s}
-@media (hover:hover){.track:hover i{background:#7f8287}}
-.track.held i{background:#6c6f74}
+.track::before{content:"";display:block;height:3px;border-radius:2px;background:var(--track)}
+.track i{position:absolute;top:14px;left:0;height:3px;border-radius:2px;background:var(--track-i);transition:background-color .2s}
+@media (hover:hover){.track:hover i{background:var(--track-hover)}}
+.track.held i{background:var(--track-held)}
 .track.still{opacity:0;pointer-events:none}
 .ghint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 44px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;color:var(--ink-3);pointer-events:none;white-space:nowrap;transition:opacity .5s}
 .ghint svg{animation:nudge 1.6s ease-in-out infinite}
 .ghint.gone,.track.still+.ghint{opacity:0}
+.gdots{display:none}
+/* Phones: the wall drops its rail and hint for the page control used in collections, one dot per screen of photos */
+@media (max-width:760px) and (min-height:501px){
+  .gdots{display:flex}
+  #vGrid .track,#vGrid .ghint{display:none}
+  .room{bottom:calc(var(--fbot,56px) + env(safe-area-inset-bottom,0px))!important}
+}
 @media (max-width:600px){
   .room{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 44px)!important}
   .track{bottom:calc(env(safe-area-inset-bottom,0px) * .5);padding:8px 0}
   .track i{top:8px}
   .ghint{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 24px)}
 }
+@media (max-width:600px) and (min-height:501px){#vGrid .room{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 48px)!important}}
 @media (max-width:600px){
   .pages{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 48px)!important}
   .fbot{height:calc(env(safe-area-inset-bottom,0px) * .5 + 48px)!important;padding-bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 14px)!important;align-items:flex-end}
@@ -150,13 +163,13 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 @media (prefers-reduced-motion:reduce){.ghint svg{animation:none}}
 
 /* Focused collection: pages that snap */
-.pages{position:absolute;left:0;right:0;top:0;bottom:calc(var(--fbot,56px) + env(safe-area-inset-bottom,0px));display:flex;overflow-x:auto;overflow-y:hidden;
+.pages{position:absolute;left:0;right:0;top:0;bottom:calc(var(--fbot,56px) + env(safe-area-inset-bottom,0px));display:flex;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;
   scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;user-select:none;-webkit-user-select:none;cursor:grab}
 .pages::-webkit-scrollbar{display:none}
 .pages.dragging{cursor:grabbing;scroll-snap-type:none}.pages.dragging *{pointer-events:none}
 .pages.locked{overflow:hidden}
 @media (pointer:coarse){.pages{cursor:auto}}
-.pg{flex:0 0 100%;min-width:0;max-width:100%;overflow:hidden;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:2vh max(20px,env(safe-area-inset-left,0px),4vw) 2vh max(20px,env(safe-area-inset-right,0px),4vw);gap:max(16px,3vw)}
+.pg{flex:0 0 100%;min-width:0;max-width:100%;overflow:hidden;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:4vh max(20px,env(safe-area-inset-left,0px),6.5vw) 3vh max(20px,env(safe-area-inset-right,0px),6.5vw);gap:max(16px,3vw)}
 .fr{margin:0;display:flex;flex-direction:column;flex:none;container-type:inline-size}
 .ph{position:relative;overflow:hidden;touch-action:pan-x;background:var(--soft) center/cover}
 .ph.zoomed{touch-action:none;overflow:visible;z-index:2;cursor:move}
@@ -181,18 +194,48 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 .opener{flex-direction:column;align-items:flex-start;justify-content:center;padding-inline:max(24px,calc((100% - 1100px) / 2))}
 .opener h2{margin:0;font:400 min(clamp(52px,10vw,140px),19vh)/.9 var(--serif);letter-spacing:-.03em}
 .opener p{margin:min(18px,2.5vh) 0 0;color:var(--ink-2);font:400 12px/1.7 var(--mono)}
-.opener .go{margin-top:min(28px,4vh);display:flex;align-items:center;gap:10px;color:var(--ink)}
-.opener .go svg{animation:nudge 1.6s ease-in-out infinite}
-@keyframes nudge{50%{transform:translateX(6px)}}
+.opener .go{margin-top:min(32px,4.5vh);display:flex;align-items:center;gap:14px;color:var(--ink);font-size:13px}
+.opener .go svg{animation:nudge 1.8s ease-in-out infinite}
+/* Large screens: the title page is a book spread. Two equal halves, the title centred on the left page and the first photo centred on the right. */
+.opener.lead{flex-direction:row;align-items:stretch;justify-content:flex-start;gap:0;padding-left:0;padding-right:0}
+.lead .op-tx,.lead .op-ph{flex:0 0 50%;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 clamp(32px,5vw,100px)}
+.lead .op-tx{text-align:center}
+/* "Collection" label over the title; centred on the spread, with a rule either side to balance it */
+.op-k{margin-bottom:min(22px,3vh)}
+.lead .op-k::after{content:"";width:28px;height:1px;background:currentColor}
+.lead .op-tx h2{font-size:min(clamp(48px,5.4vw,104px),16vh);overflow-wrap:break-word}
+@keyframes nudge{50%{transform:translateX(8px)}}
+.ghint svg{animation-name:nudge-s}@keyframes nudge-s{50%{transform:translateX(6px)}}
 .fbot{position:absolute;left:0;right:0;bottom:0;height:calc(var(--fbot,56px) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;align-items:center;justify-content:center;gap:6px}
 .dot{appearance:none;border:0;padding:10px 3px;background:none;cursor:pointer}
 .dot i{display:block;width:6px;height:6px;border-radius:3px;background:var(--rail);transition:width .3s,background .3s}
 .dot[aria-current="true"] i{width:22px;background:var(--ink)}
+.pc{display:contents}
+/* Phones: a native-style page control (the same one on collections and the All wall). Round dots in a faint capsule, at most seven showing, the outer ones shrinking when there are
+   more beyond (like iOS and Instagram). As on iOS, tapping the capsule left or right of the current dot steps one page that way. */
+@media (max-width:760px) and (min-height:501px){
+  .pg{padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+  .fr figcaption{display:none}
+  .pc{display:flex;align-items:center;height:26px;padding:0 7px;border-radius:13px;background:color-mix(in srgb,var(--ink) 8%,transparent);cursor:pointer}
+  .pc .dot{padding:10px 4px;pointer-events:none}
+  .pc .dot i,.pc .dot[aria-current="true"] i{width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--ink) 28%,transparent);transition:transform .25s}
+  .pc .dot[aria-current="true"] i{background:var(--ink)}
+  .pc .dot.sm i{transform:scale(.7)}.pc .dot.xs i{transform:scale(.45)}
+}
 .arrow{position:absolute;top:50%;z-index:3;transform:translateY(-50%);appearance:none;border:0;width:44px;height:44px;border-radius:50%;background:var(--soft);display:grid;place-items:center;cursor:pointer;transition:opacity .2s}
 .arrow:disabled{opacity:0;pointer-events:none}
-.arrow{transition:opacity .2s,background-color .2s,transform .2s}.arrow.hot{background:#e6e7e9}.arrow.l.hot{transform:translateY(-50%) translateX(-2px)}.arrow.r.hot{transform:translateY(-50%) translateX(2px)}
+.arrow{transition:opacity .2s,background-color .2s,transform .2s}.arrow.hot{background:var(--hot)}
+/* iOS-style glass: a barely-there tint of the page colour over a blur of whatever is behind, a hairline edge and a soft lift */
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .arrow{background:color-mix(in srgb,var(--bg) 52%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);
+    box-shadow:inset 0 0 0 .5px color-mix(in srgb,var(--ink) 14%,transparent),inset 0 1px 0 color-mix(in srgb,#fff 22%,transparent),0 4px 16px -6px #0003}
+  .arrow.hot{background:color-mix(in srgb,var(--bg) 72%,transparent)}
+  @media (hover:hover){.arrow:hover{background:color-mix(in srgb,var(--bg) 72%,transparent)}}
+}.arrow.l.hot{transform:translateY(-50%) translateX(-2px)}.arrow.r.hot{transform:translateY(-50%) translateX(2px)}
+@media (hover:hover){.arrow:hover{background:var(--hot)}.arrow.l:hover{transform:translateY(-50%) translateX(-2px)}.arrow.r:hover{transform:translateY(-50%) translateX(2px)}}
 .arrow.l{left:max(12px,env(safe-area-inset-left,0px))}.arrow.r{right:max(12px,env(safe-area-inset-right,0px))}
 @media (pointer:coarse){.arrow{display:none}}
+
 .view .arrow{top:calc(50% - 28px)}
 #vGrid .arrow{top:calc(50% - 14px)}
 @media (prefers-reduced-motion:reduce){.opener .go svg{animation:none}}
@@ -200,32 +243,23 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 
 <div class="draft" aria-hidden="true">Draft</div>
 <header class="top">
-  <button class="imp" id="imp" aria-label="Terrell V. Photography, home"><span class="sig">Terrell V.</span><small>Photography</small></button>
+  <button class="imp" id="imp" aria-label="Terrell Vest Photography, home"><img class="logo logo-l" src="tv-mark-black.svg" alt="" height="21"><img class="logo logo-d" src="tv-mark-white.svg" alt="" height="21"></button>
   <nav class="tabs mono" id="tabs" role="tablist" aria-label="Collections"><i id="tabI"></i></nav>
-  <span class="count mono" id="count"></span>
-</header>
-
-<main class="view" id="vHome">
-  <div class="home">
-    <section class="feat" aria-label="Featured collection">
-      <button class="feat-ph" id="featPh"></button>
-      <div class="feat-tx">
-        <p class="eyebrow mono">Featured collection</p>
-        <h1 class="feat-t" id="featT"></h1>
-        <p class="feat-b" id="featB"></p>
-        <button class="cta mono" id="featGo"></button>
-        <div class="feat-th" id="featTh"></div>
-      </div>
-    </section>
-    <h2 class="sec mono"><span>Collections</span><button class="link mono" id="allLink"></button></h2>
-    <div class="cards" id="cards"></div>
-    <footer class="foot"><span class="sig">Terrell V.</span><span class="mono" id="year"></span></footer>
+  <button class="pick mono" id="pick" aria-haspopup="true" aria-expanded="false" aria-controls="menu"><span id="pickT">Collections</span><svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"/></svg></button>
+  <div class="hr">
+    <span class="count mono" id="count"></span>
+    <button class="theme" id="theme" aria-label="Switch to dark mode">
+      <svg class="moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>
+      <svg class="sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+    </button>
   </div>
-</main>
+</header>
+<div class="menu" id="menu"><div class="menu-in" role="menu" aria-label="Collections"></div></div>
 
 <main class="view" id="vGrid" hidden>
   <div class="room" id="room" tabindex="0" aria-label="All photographs. Drag, swipe or scroll to move sideways."><div class="wall" id="wall"></div></div>
   <div class="track" id="track" aria-hidden="true"><i id="trackI"></i></div>
+  <nav class="fbot gdots" id="gdots" aria-label="Screens"><span class="pc"></span></nav>
   <div class="ghint mono" id="ghint" aria-hidden="true"><span id="ghintT">Swipe</span><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></div>
   <button class="arrow l" id="gprev" aria-label="Scroll back"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"/></svg></button>
   <button class="arrow r" id="gnext" aria-label="Scroll forward"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 1l6 6-6 6"/></svg></button>
@@ -245,6 +279,8 @@ const { P, pic, wrap, zoomable, notes, haptic, reduce } = Kit;
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
 const coarse = matchMedia('(pointer:coarse)').matches;
+// Phones held upright: the layout without imprint or captions
+const phone = matchMedia('(max-width:760px) and (min-height:501px)');
 const BLURBS = {
   City: 'Streets after rain, long shadows and the geometry of crossings.',
   People: 'Strangers caught mid-moment, at work and at rest.',
@@ -252,88 +288,83 @@ const BLURBS = {
 };
 const COLS = [
   { title: 'Recents', blurb: 'The newest work, latest first.', items: [...P].reverse() },
-  ...[...new Set(P.map(p => p.collection))].map(c => ({ title: c, blurb: BLURBS[c] || `${c} photographs.`, items: P.filter(p => p.collection === c) }))
+  ...[...new Set(P.map(p => p.collection))].map(c => ({ title: c, blurb: BLURBS[c] || '', items: P.filter(p => p.collection === c) }))
 ];
-// The collection that leads the home page
-const FEATURED = 'City', FI = Math.max(0, COLS.findIndex(c => c.title === FEATURED));
+// The featured collection: where /photography opens, and where the logo leads
+const FEATURED = 'Recents', FI = Math.max(0, COLS.findIndex(c => c.title === FEATURED));
 const ALL = { title: 'All photographs', blurb: 'Everything, in order.', items: P };
 const ARROW = '<svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg>';
 
-/* ---------- Home ---------- */
-const F = COLS[FI], slides = F.items.slice(0, 6);
-$('featT').textContent = F.title;
-$('featB').textContent = `${F.blurb} ${F.items.length} photographs.`;
-$('featGo').innerHTML = `Open collection ${ARROW}`;
-$('featPh').setAttribute('aria-label', `Open ${F.title}`);
-const layers = slides.map((p, k) => { const d = pic(p, { ratio: false, eager: k < 2, large: true }); $('featPh').appendChild(d); return d; });
-const thumbs = slides.map((p, k) => {
-  const b = document.createElement('button'); b.setAttribute('aria-label', `Show photograph ${k + 1}`);
-  b.appendChild(pic(p, { ratio: false, eager: true })); b.onclick = () => { showSlide(k); restartSlides(); };
-  $('featTh').appendChild(b); return b;
-});
-$('featTh').insertAdjacentHTML('beforeend', '<span class="feat-n mono" id="featN"></span>');
-let slide = 0, slideT = 0;
-function showSlide(k) {
-  slide = (k + slides.length) % slides.length;
-  layers.forEach((l, i) => l.classList.toggle('on', i === slide)); thumbs.forEach((t, i) => t.classList.toggle('on', i === slide));
-  $('featN').textContent = `${pad(slide + 1)} / ${pad(slides.length)}`;
-}
-// Slow crossfade through the featured collection while home is on screen
-function restartSlides() { clearInterval(slideT); if (!reduce && slides.length > 1) slideT = setInterval(() => { if (state.v === 'home' && !document.hidden) showSlide(slide + 1); }, 5600); }
-showSlide(0); restartSlides();
-$('featPh').onclick = () => go({ v: 'spread', c: FI, at: slide });
-$('featGo').onclick = () => go({ v: 'spread', c: FI });
-$('allLink').innerHTML = `All ${P.length} photographs ${ARROW}`;
-$('allLink').onclick = () => go({ v: 'grid' });
-$('year').textContent = `Photography · ${new Date().getFullYear()}`;
-const card = (title, n, cover, onclick) => {
-  const b = document.createElement('button'); b.className = 'card'; b.setAttribute('aria-label', `Open ${title}, ${n} photographs`);
-  b.appendChild(cover); b.insertAdjacentHTML('beforeend', `<div class="card-m"><b>${title}</b><span class="go mono">${n} ${ARROW}</span></div>`);
-  b.onclick = onclick; $('cards').appendChild(b);
-};
-COLS.forEach((c, ci) => {
-  if (ci === FI) return;
-  const cv = document.createElement('div'); cv.className = 'cv'; cv.appendChild(pic(c.items[0], { ratio: false }));
-  card(c.title, c.items.length, cv, () => go({ v: 'spread', c: ci }));
-});
-{ const cv = document.createElement('div'); cv.className = 'cv mos'; P.slice(0, 4).forEach(p => cv.appendChild(pic(p, { ratio: false })));
-  card('All photographs', P.length, cv, () => go({ v: 'grid' })); }
-
 /* ---------- Tabs and navigation ---------- */
-const tabs = ['All', ...COLS.map(c => c.title)].map((t, k) => {
+// Collections in order, then All, always last
+const tabs = [...COLS.map(c => c.title), 'All'].map((t, k) => {
   const b = document.createElement('button'); b.role = 'tab'; b.textContent = t; b.setAttribute('aria-selected', 'false');
-  b.onclick = () => { haptic(5); go(k === 0 ? { v: 'grid' } : { v: 'spread', c: k - 1 }); };
+  b.onclick = () => { haptic(5); go(k === COLS.length ? { v: 'grid' } : { v: 'spread', c: k }); };
   $('tabs').appendChild(b); return b;
 });
-let state = { v: 'home' };
-const tabOf = s => s.v === 'grid' || (s.v === 'spread' && s.c < 0) ? 0 : s.v === 'spread' ? s.c + 1 : -1;
+let state = { v: '' };
+const tabOf = s => s.v === 'grid' || (s.v === 'spread' && s.c < 0) ? COLS.length : s.v === 'spread' ? s.c : -1;
 function markTab() {
   const t = tabOf(state), i = $('tabI');
   tabs.forEach((b, k) => b.setAttribute('aria-selected', k === t));
-  if (t < 0) { i.style.opacity = 0; return; }
-  const b = tabs[t]; i.style.opacity = 1; i.style.width = b.offsetWidth + 'px'; i.style.transform = `translateX(${b.offsetLeft}px)`;
+  // Phones: the collection button reads as the current collection, so you always know where you are
+  $('pickT').textContent = t >= 0 ? tabs[t].textContent : 'Collections'; $('pick').setAttribute('aria-label', `Collection: ${$('pickT').textContent}. Choose another`);
+  const b = t >= 0 ? tabs[t] : null;
+  if (!b) { i.style.opacity = 0; return; }
+  i.style.opacity = 1; i.style.width = b.offsetWidth + 'px'; i.style.transform = `translateX(${b.offsetLeft}px)`;
   const bar = $('tabs'); if (bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: b.offsetLeft - (bar.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
 }
-const views = { home: $('vHome'), grid: $('vGrid'), spread: $('vSpread') };
-// From home, a view is pushed so Back returns there; switching between collections replaces, so Back always means home.
-function go(s, mode) {
+const views = { grid: $('vGrid'), spread: $('vSpread') };
+// Moving between collections replaces the history entry; a photo opened from the All wall is pushed, so Back returns to the wall.
+function go(s, mode, quiet) {
   const prev = state; state = s;
-  mode = mode || (prev.v === 'home' || (s.v === 'spread' && s.c < 0) ? 'push' : 'replace');
-  if (s.v === 'home' && mode !== 'none') mode = 'replace';
+  mode = mode || (s.v === 'spread' && s.c < 0 ? 'push' : 'replace');
+  setMenu(false);
   try { if (mode === 'push') history.pushState(s, ''); else if (mode === 'replace') history.replaceState(s, ''); } catch (e) {}
   document.body.dataset.v = s.v;
   Object.entries(views).forEach(([k, el]) => el.hidden = k !== s.v);
   stopGlide();
-  if (s.v === 'grid') { hang(); syncGrid(); room.focus({ preventScroll: true }); peek(); }
+  if (s.v === 'grid') { hang(); if (s.at != null || s.x != null) { gStop(); room.scrollLeft = s.x ?? (s.at === 'end' ? room.scrollWidth : 0); } syncGrid(); room.focus({ preventScroll: true }); peek(); }
   if (s.v === 'spread') openSpread(s.c < 0 ? ALL : COLS[s.c], s.at);
-  if (s.v === 'home') $('count').textContent = '';
-  if (!reduce && (prev.v !== s.v || prev.c !== s.c)) views[s.v].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+  if (!reduce && !quiet && (prev.v !== s.v || prev.c !== s.c)) views[s.v].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
   markTab();
 }
-$('imp').onclick = () => go({ v: 'home' });
-addEventListener('popstate', e => go(e.state || { v: 'home' }, 'none'));
-try { history.replaceState({ v: 'home' }, ''); } catch (e) {}
-document.body.dataset.v = 'home';
+const homeState = () => ({ v: 'spread', c: FI });
+// Phones: the Collections button opens a sheet listing every collection (All last), the current one marked
+const menuItems = [...COLS.map((c, k) => ({ t: c.title, n: c.items.length, s: { v: 'spread', c: k } })), { t: 'All', n: P.length, s: { v: 'grid' } }].map(it => {
+  const b = document.createElement('button'); b.className = 'mi'; b.setAttribute('role', 'menuitem');
+  b.innerHTML = `<span>${it.t}</span><small class="mono">${pad(it.n)}</small>`;
+  b.onclick = () => { haptic(5); go(it.s); };
+  $('menu').firstChild.appendChild(b); return b;
+});
+function setMenu(open) {
+  if (open === document.body.hasAttribute('data-menu')) return;
+  document.body.toggleAttribute('data-menu', open); $('pick').setAttribute('aria-expanded', open);
+  if (open) { const t = tabOf(state); menuItems.forEach((b, k) => b.setAttribute('aria-current', k === t)); }
+}
+$('pick').onclick = () => { haptic(5); setMenu(!document.body.hasAttribute('data-menu')); };
+// A tap on the sheet outside the list closes it
+$('menu').onclick = e => { if (!e.target.closest('.mi')) setMenu(false); };
+$('imp').onclick = () => go(homeState());
+// Light/dark toggle; the theme itself is applied by the script in <head>
+const syncTheme = t => $('theme').setAttribute('aria-label', `Switch to ${t === 'dark' ? 'light' : 'dark'} mode`);
+window.onTheme = t => { syncTheme(t); state.v === 'spread' && fit(); }; syncTheme(document.documentElement.dataset.theme);
+// Safari on iPhone and iPad only re-reads its own bar colours on load, so there the toggle saves your place and reloads:
+// the new theme is stored first and applied before the page paints, so it comes back in the new colours exactly where you were.
+const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const here = () => {
+  if (state.v === 'grid') return { v: 'grid', x: room.scrollLeft };
+  const f = pagesEl.children[idx()]?.querySelector('.fr');
+  return { v: 'spread', c: state.c, at: f ? +f.dataset.k : undefined };
+};
+$('theme').onclick = () => {
+  haptic(5); setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  if (iOS) { try { history.replaceState(here(), ''); } catch (e) {} location.reload(); }
+};
+// Old history entries (e.g. from when there was a home page) fall back to the featured collection
+addEventListener('popstate', e => go(e.state && views[e.state.v] ? e.state : homeState(), 'none'));
+// A reload keeps its place: remember the view it was on
+const boot = history.state;
 
 /* ---------- All: the wall ---------- */
 const room = $('room'), wall = $('wall');
@@ -348,15 +379,20 @@ function hang() {
   const cs = getComputedStyle(wall), gap = parseFloat(cs.getPropertyValue('--gap'));
   // Rows sized for a comfortable tile height (about 300px, less on phones); one row on short landscape screens.
   // If everything would fit without scrolling, drop a row so there's still a wall to slide through.
-  const avail = room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), target = innerWidth < 600 ? 220 : 300;
+  // Tiles never grow past maxH; spare height becomes space above and below the wall, which is centred.
+  const avail = room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), target = innerWidth < 600 ? 220 : 300, maxH = innerWidth < 600 ? 260 : 360;
   let n = Math.max(1, Math.min(3, Math.round((avail + gap) / (target + gap)))), H, rows;
   for (; n >= 1; n--) {
-    H = Math.floor((room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap * (n - 1)) / n);
+    H = Math.min(maxH, Math.floor((room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap * (n - 1)) / n));
     rows = Array.from({ length: n }, () => { const r = document.createElement('div'); r.className = 'row'; r.w = 0; return r; });
     P.forEach((p, i) => { const w = Math.round(H * p.w / p.h), r = rows.reduce((a, b) => b.w < a.w ? b : a); tiles[i].style.width = w + 'px'; tiles[i].style.height = H + 'px'; r.appendChild(tiles[i]); r.w += w + gap; });
     if (n === 1 || Math.max(...rows.map(r => r.w)) > room.clientWidth * 1.2 || H * (n - 1) > avail * .75) break;
   }
   wall.replaceChildren(...rows);
+  // One dot per screen's width of wall (the last one is the end)
+  const sc = Math.max(1, Math.ceil((room.scrollWidth - 2) / room.clientWidth));
+  $('gdots').firstChild.innerHTML = Array.from({ length: sc }, (_, k) => `<button class="dot" aria-label="Screen ${k + 1}"><i></i></button>`).join('');
+  gScr = -1;
 }
 $('ghintT').textContent = coarse ? 'Swipe' : 'Drag or scroll';
 // The first time the wall opens on a touch screen, it slides a little and back to show it moves sideways
@@ -365,74 +401,136 @@ function peek() {
   if (peeked || !coarse || reduce) return; peeked = true;
   setTimeout(() => { if (state.v !== 'grid' || room.scrollLeft > 4) return; glideBy(56); setTimeout(() => state.v === 'grid' && glideBy(-56), 520); }, 650);
 }
+let gScr = -1;
 function syncGrid() {
   if (state.v !== 'grid') return;
   const max = room.scrollWidth - room.clientWidth, L0 = room.scrollLeft, R0 = L0 + room.clientWidth;
+  const sc = $('gdots').firstChild.children.length, si = L0 >= max - 2 ? sc - 1 : Math.min(sc - 1, Math.round(L0 / room.clientWidth));
+  if (si !== gScr) { gScr = si; paintDots($('gdots'), si, sc); }
   const T = $('track'), Tw = T.clientWidth, SW = Math.max(1, room.scrollWidth);
   T.classList.toggle('still', max <= 1);
   if (L0 > 60) $('ghint').classList.add('gone');
   $('trackI').style.width = Tw * room.clientWidth / SW + 'px'; $('trackI').style.transform = `translateX(${Tw * L0 / SW}px)`;
-  $('gprev').disabled = L0 <= 2; $('gnext').disabled = L0 >= max - 2;
+  // The wall's arrows never dead-end: at either end they turn to the neighbouring collection
+  $('gprev').setAttribute('aria-label', L0 <= 2 ? `Previous collection: ${COLS[COLS.length - 1].title}` : 'Scroll back');
+  $('gnext').setAttribute('aria-label', L0 >= max - 2 ? `Next collection: ${COLS[0].title}` : 'Scroll forward');
   const vis = tiles.map((t, i) => (t.offsetLeft + t.offsetWidth > L0 && t.offsetLeft < R0) ? i : -1).filter(i => i >= 0);
   if (vis.length) $('count').textContent = `${pad(Math.min(...vis) + 1)}–${pad(Math.max(...vis) + 1)} / ${pad(P.length)}`;
 }
-room.addEventListener('scroll', () => requestAnimationFrame(syncGrid), { passive: true });
-let gDrag = null, gMoved = false, gRaf = 0, gTarget = null;
+// Update the rail and count at most once per frame, however many scroll events arrive
+let gSync = 0;
+room.addEventListener('scroll', () => { if (!gSync) gSync = requestAnimationFrame(() => { gSync = 0; syncGrid(); }); }, { passive: true });
+let gDrag = null, gMoved = false, gRaf = 0, gTarget = null, gPos = 0, eLast = 0, eAcc = 0, eArmed = false;
+// Every programmatic move keeps its own sub-pixel position (gPos): the browser rounds scrollLeft, and reading it back makes slow glides stutter
+const gMax = () => room.scrollWidth - room.clientWidth;
+const gStop = () => { cancelAnimationFrame(gRaf); gRaf = 0; gTarget = null; };
+// Is the wall already at its end in this direction (1 forward, -1 back)? Pushing on past it turns to the next or previous collection.
+const gAt = d => d > 0 ? room.scrollLeft >= gMax() - 2 : room.scrollLeft <= 2;
 room.addEventListener('dragstart', e => e.preventDefault());
-room.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button) return; e.preventDefault(); cancelAnimationFrame(gRaf); gDrag = { x: e.clientX, l: room.scrollLeft, t: performance.now(), vx: 0, lx: e.clientX }; gMoved = false; });
+let rT = null;
+room.addEventListener('touchstart', e => { const t = e.touches[0]; rT = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, atL: gAt(-1), atR: gAt(1) } : null; }, { passive: true });
+room.addEventListener('touchend', e => {
+  const t = e.changedTouches[0], s0 = rT; rT = null; if (!s0) return;
+  const dx = t.clientX - s0.x, dy = t.clientY - s0.y;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  if (dx < 0 && s0.atR) turnCol(1); else if (dx > 0 && s0.atL) turnCol(-1);
+}, { passive: true });
+room.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button) return; e.preventDefault(); gStop(); gDrag = { x: e.clientX, l: room.scrollLeft, t: performance.now(), vx: 0, lx: e.clientX, atL: gAt(-1), atR: gAt(1) }; gMoved = false; });
 addEventListener('pointermove', e => {
   if (!gDrag) return; const dx = e.clientX - gDrag.x;
   if (!gMoved && Math.abs(dx) > 5) { gMoved = true; room.classList.add('dragging'); }
   if (!gMoved) return; room.scrollLeft = gDrag.l - dx;
-  const now = performance.now(); gDrag.vx = .8 * ((e.clientX - gDrag.lx) / Math.max(1, now - gDrag.t)) + .2 * gDrag.vx; gDrag.lx = e.clientX; gDrag.t = now;
+  const now = performance.now(), dt = Math.max(1, now - gDrag.t); gDrag.vx = .8 * ((e.clientX - gDrag.lx) / dt) + .2 * gDrag.vx; gDrag.lx = e.clientX; gDrag.t = now;
 });
 addEventListener('pointerup', () => {
-  if (!gDrag) return; let vx = gDrag.vx * 16; gDrag = null; room.classList.remove('dragging');
-  if (!reduce) { const step = () => { if (Math.abs(vx) < .4) return; room.scrollLeft -= vx; vx *= .94; gRaf = requestAnimationFrame(step); }; gRaf = requestAnimationFrame(step); }
+  if (!gDrag) return; let v = gDrag.vx; const g = gDrag, dx = g.lx - g.x; gDrag = null; room.classList.remove('dragging');
+  // Dragged on past an end it was already at
+  if (gMoved && ((dx < -80 && g.atR) || (dx > 80 && g.atL))) { setTimeout(() => gMoved = false, 0); turnCol(dx < 0 ? 1 : -1); return; }
+  // Throw: carry the release speed (px/ms) and let it decay at the same rate whatever the screen's refresh rate
+  if (!reduce && Math.abs(v) > .05) {
+    gPos = room.scrollLeft; let last = performance.now();
+    const step = now => { const dt = Math.max(0, Math.min(48, now - last)); last = now; gPos = Math.max(0, Math.min(gMax(), gPos - v * dt)); room.scrollLeft = gPos; v *= Math.pow(.94, dt / 16.7); gRaf = Math.abs(v) > .02 && gPos > 0 && gPos < gMax() ? requestAnimationFrame(step) : 0; };
+    gRaf = requestAnimationFrame(step);
+  }
   setTimeout(() => gMoved = false, 0);
 });
 room.addEventListener('wheel', e => {
-  if (e.ctrlKey) return; e.preventDefault(); cancelAnimationFrame(gRaf);
-  const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX, max = room.scrollWidth - room.clientWidth;
-  glideBy(d * (e.deltaMode === 1 ? 32 : 1), max);
+  if (e.ctrlKey) return;
+  // A notched mouse wheel jumps in big steps, so glide between them. Trackpads and smooth wheels already send fine, momentum-carrying deltas:
+  // sideways ones are left to the browser's own scrolling, and up/down ones are turned sideways one to one, with no extra easing.
+  const notched = e.deltaMode !== 0 || (Math.abs(e.wheelDelta) >= 120 && e.wheelDelta % 120 === 0);
+  const sideways = Math.abs(e.deltaX) > Math.abs(e.deltaY), d = sideways ? e.deltaX : e.deltaY, now = performance.now();
+  // Only a new gesture that begins already at an end counts, so the momentum that carried you there can't flip the page
+  if (now - eLast > 220) { eArmed = gAt(Math.sign(d)); eAcc = 0; } eLast = now;
+  if (eArmed && d && gAt(Math.sign(d))) { e.preventDefault(); eAcc += d; if (Math.abs(eAcc) > 90) { eArmed = false; turnCol(Math.sign(eAcc)); } return; }
+  if (!notched && sideways) { gStop(); return; }
+  e.preventDefault();
+  if (notched) glideBy(d * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? room.clientWidth : 1));
+  else { gStop(); room.scrollLeft += d; }
 }, { passive: false });
-function glideBy(d, max = room.scrollWidth - room.clientWidth) {
-  gTarget = Math.max(0, Math.min(max, (gTarget ?? room.scrollLeft) + d));
-  const glide = () => { const diff = gTarget - room.scrollLeft; if (Math.abs(diff) < .5) { room.scrollLeft = gTarget; gTarget = null; return; } room.scrollLeft += diff * .18; gRaf = requestAnimationFrame(glide); };
-  cancelAnimationFrame(gRaf); if (reduce) { room.scrollLeft = gTarget; gTarget = null; } else gRaf = requestAnimationFrame(glide);
+function glideBy(d) {
+  const max = gMax();
+  if (coarse && !reduce) { gStop(); room.scrollTo({ left: Math.max(0, Math.min(max, room.scrollLeft + d)), behavior: 'smooth' }); return; }
+  // Not already gliding: stop any throw still coasting and start from where the wall is now
+  if (gTarget == null) { cancelAnimationFrame(gRaf); gRaf = 0; gPos = room.scrollLeft; }
+  gTarget = Math.max(0, Math.min(max, (gTarget ?? gPos) + d));
+  if (reduce) { room.scrollLeft = gPos = gTarget; gTarget = null; return; }
+  if (gRaf) return;
+  let last = performance.now();
+  // Ease toward the target by time, not by frame, so it feels the same at 60Hz and 120Hz
+  const glide = now => {
+    const dt = Math.max(0, Math.min(48, now - last)); last = now;
+    const diff = gTarget - gPos;
+    if (Math.abs(diff) < .3) { room.scrollLeft = gPos = gTarget; gTarget = null; gRaf = 0; return; }
+    gPos += diff * (1 - Math.exp(-dt / 85)); room.scrollLeft = gPos; gRaf = requestAnimationFrame(glide);
+  };
+  gRaf = requestAnimationFrame(glide);
 }
 // Drag or click the rail to move through the wall
 let tHeld = null;
 const tTo = x => { const r = $('track').getBoundingClientRect(); room.scrollLeft = (x - r.left - tHeld) / r.width * room.scrollWidth; };
 $('track').addEventListener('pointerdown', e => {
-  cancelAnimationFrame(gRaf); gTarget = null; $('track').setPointerCapture(e.pointerId); $('track').classList.add('held');
+  gStop(); $('track').setPointerCapture(e.pointerId); $('track').classList.add('held');
   const k = $('trackI').getBoundingClientRect(), on = e.clientX >= k.left && e.clientX <= k.right;
   tHeld = on ? e.clientX - k.left : k.width / 2; if (!on) tTo(e.clientX);
 });
 $('track').addEventListener('pointermove', e => tHeld != null && tTo(e.clientX));
 const tRel = () => { tHeld = null; $('track').classList.remove('held'); };
 $('track').addEventListener('pointerup', tRel); $('track').addEventListener('pointercancel', tRel);
-$('gprev').onclick = () => glideBy(-room.clientWidth * .8);
-$('gnext').onclick = () => glideBy(room.clientWidth * .8);
+$('gprev').onclick = () => gAt(-1) ? turnCol(-1) : glideBy(-room.clientWidth * .8);
+// Phones: a tap on the wall's page control steps a screen toward that side of the current dot (or on to the next collection at an end)
+$('gdots').firstChild.onclick = e => {
+  const c = $('gdots').querySelector('.dot[aria-current="true"]'); if (!c) return;
+  const r = c.getBoundingClientRect(), d = e.clientX < r.left + r.width / 2 ? -1 : 1;
+  gAt(d) ? turnCol(d) : glideBy(d * room.clientWidth);
+};
+$('gnext').onclick = () => gAt(1) ? turnCol(1) : glideBy(room.clientWidth * .8);
 
 /* ---------- Focused collection ---------- */
 const focus = $('focus'), pagesEl = $('pages');
 let cur = null, pages = [], zooms = [];
 // Group photos into pages: a landscape photo gets a page to itself; on wide screens two portraits share one.
 // Two portraits share a page only when the screen is wide enough to show both at full height.
-function compose(items) {
-  const W = innerWidth * .92 - 40, H = Math.max(200, innerHeight - (innerHeight <= 500 ? 52 : innerWidth <= 760 ? 100 : 72) - 56 - capH() - innerHeight * .04), out = [];
-  for (let i = 0; i < items.length; i++) {
+// With a lead title page, photo 1 sits beside the title on its own and grouping starts from photo 2.
+function compose(items, lead) {
+  const W = innerWidth * .92 - 40, H = Math.max(200, innerHeight - (innerHeight <= 500 ? 52 : innerWidth <= 760 ? 56 : 60) - 56 - capH() - innerHeight * .04), out = lead ? [[0]] : [];
+  for (let i = lead ? 1 : 0; i < items.length; i++) {
     const p = items[i], q = items[i + 1];
     if (p.h > p.w && q && q.h > q.w && (p.w / p.h + q.w / q.h) * H <= W) { out.push([i, i + 1]); i++; } else out.push([i]);
   }
   return out;
 }
+// Large screens (not phones or short landscape) put the first photo on the title page, so it's on screen the moment a collection opens
+const leadOK = () => !phone.matches && innerWidth >= 900 && innerHeight > 500;
+let lead = false;
 function render() {
-  const items = cur.items; pages = compose(items); zooms = [];
-  pagesEl.innerHTML = `<section class="pg opener"><h2>${cur.title}</h2><p>${items.length} photographs · ${pages.length} pages<br>${cur.blurb}</p><span class="go mono">Drag or swipe <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></span></section>`;
-  pages.forEach(group => {
-    const s = document.createElement('section'); s.className = 'pg';
+  const items = cur.items; lead = leadOK() && items.length > 0; pages = compose(items, lead); zooms = [];
+  const intro = `<div class="op-tx">${cur === ALL ? '' : '<div class="eyebrow mono op-k">Collection</div>'}<h2>${cur.title}</h2><p>${items.length} photographs${cur.blurb ? `<br>${cur.blurb}` : ''}</p><span class="go mono">Drag, swipe or click${lead ? ' for more' : ''} <svg width="28" height="12" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></span></div>`;
+  pagesEl.innerHTML = lead ? '' : `<section class="pg opener">${intro}</section>`;
+  pages.forEach((group, gi) => {
+    const s = document.createElement('section'); s.className = lead && !gi ? 'pg opener lead' : 'pg';
+    if (lead && !gi) s.innerHTML = intro + '<div class="op-ph"></div>';
+    const into = s.querySelector('.op-ph') || s;
     group.forEach(k => {
       const p = items[k], f = document.createElement('figure'); f.className = 'fr'; f.dataset.k = k;
       const box = document.createElement('div'); box.className = 'ph'; box.style.backgroundImage = `url(${p.lqip})`;
@@ -440,23 +538,28 @@ function render() {
       img.onload = () => img.classList.add('in'); box.appendChild(wrap(img, p, true));
       f.appendChild(box);
       f.insertAdjacentHTML('beforeend', caption(p, k));
-      s.appendChild(f);
+      into.appendChild(f);
       zooms.push(zoomable(box, img, z => pagesEl.classList.toggle('locked', z)));
     });
     pagesEl.appendChild(s);
   });
-  $('dots').innerHTML = [...pagesEl.children].map((_, i) => `<button class="dot" aria-label="Page ${i + 1}"><i></i></button>`).join('');
-  [...$('dots').children].forEach((d, i) => d.onclick = () => goTo(i));
-  fit();
+  $('dots').innerHTML = `<span class="pc">${[...pagesEl.children].map((_, i) => `<button class="dot" aria-label="Page ${i + 1}"><i></i></button>`).join('')}</span>`;
+  $('dots').querySelectorAll('.dot').forEach((d, i) => d.onclick = () => goTo(i));
+  // Phones: a tap on the capsule steps toward that side of the current dot
+  $('dots').firstChild.onclick = e => { if (!phone.matches) return; const c = $('dots').querySelector('.dot[aria-current="true"]').getBoundingClientRect(); goTo(aim() + (e.clientX < c.left + c.width / 2 ? -1 : 1)); };
+  synced = -1; fit();
 }
-// Room kept under each photo for its caption: three lines where photos are narrow, two otherwise.
-const capH = () => innerHeight <= 500 ? 44 : innerWidth < 700 ? 76 : 56;
+// Room kept under each photo for its caption: none on upright phones (no caption), three lines where photos are narrow, two otherwise.
+const capH = () => innerHeight <= 500 ? 44 : phone.matches ? 0 : innerWidth < 700 ? 76 : 56;
 // Size every photo as large as its page allows, keeping true proportions.
 function fit() {
   [...pagesEl.children].forEach(s => {
     const frs = [...s.querySelectorAll('.fr')]; if (!frs.length) return;
     const cs = getComputedStyle(s), gap = parseFloat(cs.columnGap) || 0;
-    const W = pagesEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - gap * (frs.length - 1);
+    // On the spread title page the photo has only its own half (the right page) to fill
+    const half = frs[0].parentElement !== s && frs[0].parentElement, hs = half && getComputedStyle(half);
+    const W = half ? half.clientWidth - parseFloat(hs.paddingLeft) - parseFloat(hs.paddingRight)
+      : pagesEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - gap * (frs.length - 1);
     const H = pagesEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - capH();
     const sum = frs.reduce((a, f) => { const p = cur.items[+f.dataset.k]; return a + p.w / p.h; }, 0);
     const h = Math.min(H, W / sum);
@@ -464,14 +567,36 @@ function fit() {
   });
 }
 const idx = () => Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+// Mark dot i of n current. Upright phones show a window of seven dots around it; the outer two shrink when more lie beyond.
+function paintDots(el, i, n) {
+  const N = 7, s = Math.max(0, Math.min(n - N, i - 3)), e = Math.min(n, s + N), ph = phone.matches;
+  el.querySelectorAll('.dot').forEach((d, k) => {
+    d.setAttribute('aria-current', String(k === i)); d.hidden = ph && (k < s || k >= e);
+    const far = ph && ((s > 0 && k === s) || (e < n && k === e - 1)), near = ph && ((s > 0 && k === s + 1) || (e < n && k === e - 2));
+    d.classList.toggle('xs', far); d.classList.toggle('sm', near && !far);
+  });
+}
+// Header count, dots and arrows only change when the page does: skip the work on the many scroll frames in between,
+// so nothing touches layout mid-swipe. render() and resize reset `synced` to force a refresh.
+let synced = -1;
 function syncFocus() {
   const i = idx(), n = pagesEl.children.length;
-  $('count').textContent = `${pad(i + 1)} / ${pad(n)}`;
-  [...$('dots').children].forEach((d, k) => d.setAttribute('aria-current', k === i));
-  $('prev').disabled = i === 0; $('next').disabled = i === n - 1;
+  if (i === synced) return; synced = i;
+  // Count photographs, not pages: the opener has none and a wide-screen page can hold two or more
+  const ks = [...(pagesEl.children[i]?.querySelectorAll('.fr') || [])].map(f => +f.dataset.k + 1);
+  $('count').textContent = ks.length ? `${pad(ks[0])}${ks.length > 1 ? '–' + pad(ks[ks.length - 1]) : ''} / ${pad(cur.items.length)}` : '';
+  paintDots($('dots'), i, n);
+  const end = i === n - 1, nx = end && nextOf(), pv = i === 0 && prevOf();
+  $('prev').disabled = i === 0 && !pv; $('next').disabled = end && !nx;
+  $('prev').setAttribute('aria-label', pv ? (pv.v === 'grid' ? 'All photographs' : `Previous collection: ${COLS[pv.c].title}`) : 'Previous page');
+  $('next').setAttribute('aria-label', nx ? (nx.v === 'grid' ? 'All photographs' : `Next collection: ${COLS[nx.c].title}`) : 'Next page');
 }
 let lastI = 0;
-pagesEl.addEventListener('scroll', () => { requestAnimationFrame(syncFocus); const i = idx(); if (i !== lastI) { zooms.forEach(z => z.zoomed && z.reset()); lastI = i; haptic(4); } }, { passive: true });
+let fSync = 0;
+pagesEl.addEventListener('scroll', () => {
+  if (!fSync) fSync = requestAnimationFrame(() => { fSync = 0; syncFocus(); });
+  const i = idx(); if (i !== lastI) { zooms.forEach(z => z.zoomed && z.reset()); lastI = i; haptic(4); }
+}, { passive: true });
 function caption(p, k) {
   const set = [p.mm && `${p.mm}mm`, p.iso && `ISO ${p.iso}`, p.shutter && `${p.shutter}s`, p.f && `ƒ/${p.f}`].filter(Boolean).map(v => `<span>${v}</span>`).join('');
   const credit = p.place ? `<span class="cr">${p.place.replace(/^Photo by /, '')}</span>` : '';
@@ -485,35 +610,79 @@ function caption(p, k) {
 // (mid-drag included) at the hand's speed, easing into the page instead of replaying a full page turn.
 let gRun = null;
 function stopGlide() { if (!gRun) return; cancelAnimationFrame(gRun.raf); gRun = null; pagesEl.style.scrollSnapType = ''; }
+// Everything is one continuous loop, in tab order: each collection, then the All wall, then back to the first collection.
+// Forward lands on a collection's title page (or the start of the wall); back lands on its last page (or the end of the wall).
+// Only the tabbed views chain; the All sequence opened from the wall doesn't.
+const lastOf = c => ({ v: 'spread', c, at: COLS[c].items.length - 1 });
+const nextOf = () => state.v === 'grid' ? { v: 'spread', c: 0 } : state.v === 'spread' && state.c >= 0 ? (state.c + 1 < COLS.length ? { v: 'spread', c: state.c + 1 } : { v: 'grid', at: 0 }) : null;
+const prevOf = () => state.v === 'grid' ? lastOf(COLS.length - 1) : state.v === 'spread' && state.c >= 0 ? (state.c > 0 ? lastOf(state.c - 1) : { v: 'grid', at: 'end' }) : null;
+// Turn the page: a copy of the current page slides out while the new collection slides in behind it, like any other swipe
+function turnCol(dir) {
+  const s = dir > 0 ? nextOf() : prevOf(); if (!s) return false;
+  const fromGrid = state.v === 'grid', src = fromGrid ? room : pagesEl, r = src.getBoundingClientRect(), keep = room.scrollLeft;
+  const old = fromGrid ? room.cloneNode(true) : pagesEl.children[idx()]?.cloneNode(true);
+  let ghost = null;
+  if (!reduce && old) {
+    old.querySelectorAll('[id]').forEach(el => el.removeAttribute('id')); old.removeAttribute('id');
+    if (fromGrid) old.style.inset = '0';
+    ghost = document.createElement('div'); ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.cssText = `position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;display:flex;overflow:hidden;pointer-events:none;z-index:5;background:var(--bg)`;
+    ghost.appendChild(old);
+  }
+  go(s, undefined, !!ghost);
+  if (!ghost) return true;
+  document.body.appendChild(ghost); if (fromGrid) old.scrollLeft = keep;
+  const o = { duration: 680, easing: 'cubic-bezier(.45,.05,.25,1)' }, W = r.width;
+  ghost.animate([{ transform: 'none' }, { transform: `translateX(${-dir * W}px)` }], o).onfinish = () => ghost.remove();
+  (s.v === 'grid' ? room : pagesEl).animate([{ transform: `translateX(${dir * W}px)` }, { transform: 'none' }], o);
+  return true;
+}
 function goTo(i, v = 0) {
-  const n = pagesEl.children.length, W = pagesEl.clientWidth; i = Math.max(0, Math.min(n - 1, i));
+  const n = pagesEl.children.length, W = pagesEl.clientWidth;
+  if (i > n - 1 && pagesEl.scrollLeft >= (n - 1) * W - 2 && turnCol(1)) return;
+  if (i < 0 && pagesEl.scrollLeft <= 2 && turnCol(-1)) return;
+  i = Math.max(0, Math.min(n - 1, i));
   stopGlide();
   const from = pagesEl.scrollLeft, to = i * W, d = to - from;
   if (reduce || Math.abs(d) < 1) { pagesEl.scrollLeft = to; return; }
-  // easeOutCubic starts at slope 3d/T, so pick T to match the release speed (px/ms); otherwise scale with distance
+  // Touch screens: let the browser's own smooth scroll do it, on its scrolling thread, the same motion as a native swipe
+  if (coarse) { pend = { i, t: performance.now() + 700 }; pagesEl.scrollTo({ left: to, behavior: 'smooth' }); return; }
+  // After a swipe, carry on at exactly the speed the hand let go at and ease out from there (easeOutCubic starts at slope 3d/T,
+  // so T matches the release speed): a fast flick finishes fast, a lazy one drifts. Never slower than the gesture, which would feel like a fight.
+  // Taps, keys and arrows have no hand speed to match, so they use a soft ease in and out at a calm, fixed pace.
   const toward = v && Math.sign(v) === Math.sign(d) ? Math.abs(v) : 0;
-  const T = toward ? Math.max(180, Math.min(520, 3 * Math.abs(d) / toward)) : Math.max(260, Math.min(560, 260 + Math.abs(d) / W * 300));
+  const T = toward ? Math.max(160, Math.min(560, 3 * Math.abs(d) / toward)) : Math.max(480, Math.min(680, 480 + Math.abs(d) / W * 200));
   const t0 = performance.now();
   pagesEl.style.scrollSnapType = 'none';
   const run = gRun = { i, raf: 0 };
   const step = now => {
     if (gRun !== run) return;
-    const k = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - k, 3);
+    const k = Math.min(1, (now - t0) / T), e = toward ? 1 - Math.pow(1 - k, 3) : k * k * k * (k * (6 * k - 15) + 10);
     pagesEl.scrollLeft = from + d * e;
     if (k < 1) run.raf = requestAnimationFrame(step); else { gRun = null; pagesEl.style.scrollSnapType = ''; }
   };
   run.raf = requestAnimationFrame(step);
 }
-const aim = () => gRun ? gRun.i : idx();
+// Where the page is heading: a running glide's target, a native smooth scroll still under way, or where it is now
+let pend = null;
+const aim = () => gRun ? gRun.i : pend && performance.now() < pend.t ? pend.i : idx();
 $('prev').onclick = () => goTo(aim() - 1); $('next').onclick = () => goTo(aim() + 1);
-pagesEl.addEventListener('touchstart', stopGlide, { passive: true });
-
+// Touch: native scrolling can't go past the first or last page, so a clear sideways swipe there turns to the neighbouring collection
+let tStart = null;
+pagesEl.addEventListener('touchstart', e => { stopGlide(); pend = null; const t = e.touches[0]; tStart = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, i: idx(), n: pagesEl.children.length } : null; }, { passive: true });
+pagesEl.addEventListener('touchend', e => {
+  const t = e.changedTouches[0], s0 = tStart; tStart = null;
+  if (!s0 || zooms.some(z => z.zoomed)) return;
+  const dx = t.clientX - s0.x, dy = t.clientY - s0.y;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  if (dx < 0 && s0.i === s0.n - 1) turnCol(1); else if (dx > 0 && s0.i === 0) turnCol(-1);
+}, { passive: true });
 // The empty space beside a page's photos turns it: left of the leftmost photo goes back, right of the rightmost goes forward.
-// Photos themselves do nothing on click. The title page splits at its middle.
+// Photos themselves do nothing on click. Anywhere on the title page starts the collection.
 function zone(x) {
   const pg = pagesEl.children[aim()]; if (!pg) return 0;
   const frs = pg.querySelectorAll('.fr');
-  if (!frs.length) { const r = pg.getBoundingClientRect(); return x < r.left + r.width / 2 ? -1 : 1; }
+  if (!frs.length) return 1;
   const L = frs[0].getBoundingClientRect().left, R = frs[frs.length - 1].getBoundingClientRect().right;
   return x < L ? -1 : x > R ? 1 : 0;
 }
@@ -524,28 +693,34 @@ pagesEl.addEventListener('click', e => {
 });
 pagesEl.addEventListener('mousemove', e => {
   if (fd) return; const z = e.target.closest('.fr') ? 0 : zone(e.clientX), i = aim(), n = pagesEl.children.length;
-  const back = z < 0 && i > 0, fwd = z > 0 && i < n - 1;
+  const back = z < 0 && (i > 0 || !!prevOf()), fwd = z > 0 && (i < n - 1 || !!nextOf());
   pagesEl.style.cursor = back || fwd ? 'pointer' : '';
   $('prev').classList.toggle('hot', back); $('next').classList.toggle('hot', fwd);
 });
-pagesEl.addEventListener('mouseleave', () => { $('prev').classList.remove('hot'); $('next').classList.remove('hot'); });
+// The arrows sit on top of the pages, so moving onto one isn't leaving: keep its highlight until the pointer is really gone
+const cool = e => { const t = e.relatedTarget; if (t && (t.closest('.arrow') || pagesEl.contains(t))) return; $('prev').classList.remove('hot'); $('next').classList.remove('hot'); };
+pagesEl.addEventListener('mouseleave', cool); $('prev').addEventListener('mouseleave', cool); $('next').addEventListener('mouseleave', cool);
 function openSpread(c, photoIndex) {
   cur = c; render();
-  const pi = photoIndex != null ? pages.findIndex(g => g.includes(photoIndex)) + 1 : 0;
+  const pi = photoIndex != null ? pages.findIndex(g => g.includes(photoIndex)) + (lead ? 0 : 1) : 0;
   pagesEl.style.scrollSnapType = 'none'; pagesEl.scrollLeft = pi * pagesEl.clientWidth; pagesEl.style.scrollSnapType = '';
   lastI = pi; syncFocus(); pagesEl.focus({ preventScroll: true });
 }
 
 // Mouse drag between pages: follows the hand, then settles on the nearest page (a quick flick moves one page).
+// Touch uses the browser's native scrolling and snapping, which runs off the main thread and stays fluid on every phone.
 let fd = null;
 pagesEl.addEventListener('dragstart', e => e.preventDefault());
-pagesEl.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button || zooms.some(z => z.zoomed)) return; e.preventDefault(); stopGlide(); const now = performance.now(); fd = { x: e.clientX, l: pagesEl.scrollLeft, i: idx(), t: now, moved: false, hx: [[now, e.clientX]] }; });
+pagesEl.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse' || e.button || zooms.some(z => z.zoomed)) return;
+  e.preventDefault(); stopGlide(); const now = performance.now(); fd = { x: e.clientX, l: pagesEl.scrollLeft, i: idx(), t: now, moved: false, hx: [[now, e.clientX]] }; });
 addEventListener('pointermove', e => {
   if (!fd) return; const dx = e.clientX - fd.x;
   if (!fd.moved && Math.abs(dx) > 4) { fd.moved = true; pagesEl.classList.add('dragging'); }
   if (fd.moved) pagesEl.scrollLeft = fd.l - dx;
   const now = performance.now(); fd.hx.push([now, e.clientX]); while (fd.hx.length > 2 && now - fd.hx[0][0] > 90) fd.hx.shift();
 });
+addEventListener('pointercancel', () => { if (!fd) return; const i = fd.i; fd = null; pagesEl.classList.remove('dragging'); goTo(i); });
 addEventListener('pointerup', e => {
   if (!fd) return; const dx = e.clientX - fd.x, W = pagesEl.clientWidth, start = fd.i, moved = fd.moved, h = fd.hx, now = performance.now(); fd = null;
   if (!moved) return;
@@ -573,17 +748,22 @@ addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(aim() - 1); }
   }
   if (state.v === 'grid') {
-    if (e.key === 'ArrowRight') { e.preventDefault(); glideBy(room.clientWidth * .5); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); glideBy(-room.clientWidth * .5); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); gAt(1) ? turnCol(1) : glideBy(room.clientWidth * .5); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); gAt(-1) ? turnCol(-1) : glideBy(-room.clientWidth * .5); }
   }
-  if (e.key === 'Escape' && state.v !== 'home') { state.v === 'spread' && state.c < 0 ? history.back() : go({ v: 'home' }); }
+  if (e.key === 'Escape') { if (document.body.hasAttribute('data-menu')) setMenu(false); else if (state.v === 'spread' && state.c < 0) history.back(); }
 });
 addEventListener('resize', () => {
+  if (!phone.matches) setMenu(false);
   if (state.v === 'grid') { hang(); syncGrid(); }
-  if (state.v === 'spread') { stopGlide(); const i = idx(); const was = pages.length; const n = compose(cur.items).length; if (n !== was) render(); else fit(); pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; syncFocus(); }
+  if (state.v === 'spread') { stopGlide(); const i = idx(); const was = pages.length; const n = compose(cur.items, leadOK()).length; if (n !== was || leadOK() !== lead) render(); else fit(); pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; synced = -1; syncFocus(); }
   markTab();
 });
 document.fonts && document.fonts.ready.then(markTab);
+// Re-measure the underline whenever a tab changes size, e.g. when the web font swaps in after the first measurement (iOS)
+if ('ResizeObserver' in window) { const ro = new ResizeObserver(() => markTab()); ro.observe($('tabs')); tabs.forEach(b => ro.observe(b)); }
+// Open where a reload left off, else on the featured collection
+go(boot && views[boot.v] ? boot : homeState(), 'replace');
 
 </script>
 
