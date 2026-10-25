@@ -1,0 +1,9 @@
+// Cloudflare Workers static site: serves a temporary "under construction" page until the new site goes live.
+{
+  "name": "terrellvest",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./_construction",
+    "html_handling": "auto-trailing-slash"
+  }
+}
