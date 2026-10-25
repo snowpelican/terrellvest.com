@@ -1,0 +1,9 @@
+// Cloudflare Workers static site: serves the prebuilt _dist folder as is.
+{
+  "name": "terrellvest",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./_dist",
+    "html_handling": "auto-trailing-slash"
+  }
+}
