@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}.draft{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:50;pointer-events:none;font:500 9px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2);background:#ffffffd9;border:1px solid var(--line);border-radius:999px;padding:6px 7px 6px 9px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+</style>
+<title>Terrell V. Photography</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=Pinyon+Script&display=swap">
+<style>
+/* Layout: everything is a collection. "All" is a sideways wall of every photo; any other collection opens as snapping, spread-like pages. One header with the imprint and collection tabs ties them together. */
+:root{
+  --bg:#ffffff; --ink:#151617; --ink-2:#6a6e73; --ink-3:#a3a7ac; --line:#15161714; --soft:#f3f4f5; --rail:#1516171f;
+  --serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --head-h:72px; --side:40px;
+  color-scheme:light;
+}
+@media (max-width:760px){:root{--side:20px}}
+@media (max-width:760px) and (min-height:501px){:root{--head-h:100px}}
+@media (max-height:500px){:root{--head-h:52px;--side:20px;--fbot:40px}}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.pages:focus,.room:focus{outline:none}
+.mono{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+
+/* Header: imprint, collection tabs, position */
+.top{position:fixed;left:0;right:0;top:0;z-index:10;height:calc(var(--head-h) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(var(--side),env(safe-area-inset-right,0px)) 0 max(var(--side),env(safe-area-inset-left,0px));
+  box-sizing:border-box;background:var(--bg);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:24px}
+.imp{appearance:none;border:0;background:none;padding:4px 0;cursor:pointer;justify-self:start;display:flex;flex-direction:column;align-items:flex-start;white-space:nowrap;color:var(--ink)}
+/* Stamp: signature in script, trade line in spaced mono beneath */
+.sig{font:400 30px/.9 "Pinyon Script",var(--serif);letter-spacing:0;margin-left:-2px}
+.imp small{font:500 7.5px/1 var(--mono);letter-spacing:.42em;text-transform:uppercase;color:var(--ink-2);margin:3px 0 0 3px}
+.tabs{display:flex;gap:26px;position:relative;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{appearance:none;border:0;background:none;padding:12px 0;cursor:pointer;color:var(--ink-3);white-space:nowrap;transition:color .2s}
+@media (hover:hover){.tabs button:hover{color:var(--ink-2)}}
+.tabs button[aria-selected="true"]{color:var(--ink)}
+.tabs i{position:absolute;left:0;bottom:4px;height:1px;background:var(--ink);transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),opacity .2s;opacity:0}
+@media (max-height:500px){.top{column-gap:18px}.tabs{gap:18px}}
+@media (max-height:500px){.sig{font-size:24px}.imp small{display:none}}
+@media (max-width:760px) and (min-height:501px){.sig{font-size:26px}.imp small{font-size:7px}}
+.count{justify-self:end;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:760px) and (min-height:501px){
+  .top{grid-template-columns:1fr auto;grid-template-rows:44px 44px;align-content:center}
+  .tabs{grid-column:1/-1;grid-row:2;margin:0 calc(-1 * var(--side));padding:0 var(--side);gap:22px}
+  .count{grid-row:1;grid-column:2}
+}
+.view{position:fixed;left:0;right:0;top:calc(var(--head-h) + env(safe-area-inset-top,0px));bottom:0}
+
+/* Home: one featured collection leads, the rest and the full set sit right below */
+#vHome{overflow-y:auto;overscroll-behavior-y:contain}
+.home{max-width:1320px;margin:0 auto;padding:12px max(var(--side),env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 40px) max(var(--side),env(safe-area-inset-left,0px))}
+.feat{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(260px,1fr);gap:clamp(28px,4.5vw,72px);align-items:end;height:clamp(440px,calc(100dvh - var(--head-h) - 112px),860px)}
+.feat-ph{appearance:none;border:0;padding:0;background:var(--soft);position:relative;overflow:hidden;height:100%;width:100%;cursor:pointer;display:block}
+.feat-ph .kp{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.4s ease}
+.feat-ph .kp.on{opacity:1;z-index:1}
+.feat-ph .kp img{transform:scale(1.05);transition:opacity .45s,transform 8s cubic-bezier(.2,.6,.3,1)}
+.feat-ph .kp.on img{transform:scale(1)}
+.feat-tx{padding-bottom:2px;min-width:0}
+.eyebrow{margin:0;color:var(--ink-2);display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:"";width:28px;height:1px;background:currentColor}
+.feat-t{margin:20px 0 0;font:400 clamp(64px,8.6vw,150px)/.86 var(--serif);letter-spacing:-.035em}
+.feat-b{margin:22px 0 0;color:var(--ink-2);font:400 12px/1.75 var(--mono);max-width:34ch}
+.cta{appearance:none;border:0;background:none;padding:10px 0;margin-top:26px;cursor:pointer;display:inline-flex;align-items:center;gap:12px;color:var(--ink);border-bottom:1px solid var(--ink)}
+.cta svg,.link svg,.card .go svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+@media (hover:hover){.cta:hover svg,.link:hover svg,.card:hover .go svg{transform:translateX(4px)}}
+.feat-th{display:flex;align-items:center;gap:8px;margin-top:clamp(28px,5vh,56px)}
+.feat-th button{appearance:none;border:0;padding:0;background:none;cursor:pointer;width:52px;height:52px;opacity:.38;transition:opacity .3s}
+.feat-th button.on,.feat-th button:hover{opacity:1}
+.feat-th .kp{width:100%;height:100%}
+.feat-n{margin-left:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.sec{margin:clamp(64px,10vh,104px) 0 24px;display:flex;justify-content:space-between;align-items:baseline;gap:16px;color:var(--ink-2)}
+.link{appearance:none;border:0;background:none;padding:6px 0;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:10px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px}
+.card{appearance:none;border:0;padding:0;background:none;text-align:left;cursor:pointer;display:block;min-width:0}
+.card .cv{aspect-ratio:4/5;overflow:hidden;background:var(--soft)}
+.card .cv .kp{width:100%;height:100%}
+.card .cv.mos{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;background:none}
+.card .kp img{transition:opacity .45s,transform .7s cubic-bezier(.2,.8,.2,1)}
+@media (hover:hover){.card:hover .kp img{transform:scale(1.035)}}
+.card-m{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:14px}
+.card-m b{font:400 24px/1.1 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-m span{color:var(--ink-2)}
+.go{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.foot{margin-top:clamp(72px,12vh,120px);padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;color:var(--ink-3)}
+.foot .sig{font-size:26px;color:var(--ink)}
+@media (max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.feat{grid-template-columns:minmax(0,1.25fr) minmax(240px,1fr)}}
+/* Phones: the featured photo runs edge to edge, collections become a swipeable row */
+@media (max-width:700px){
+  .feat{display:block;height:auto}
+  .feat-ph{margin:0 calc(-1 * var(--side));width:calc(100% + 2 * var(--side));height:auto;aspect-ratio:4/5;max-height:calc(100dvh - var(--head-h) - 150px)}
+  .feat-tx{padding-top:26px}
+  .feat-t{margin-top:14px;font-size:clamp(56px,17vw,84px)}
+  .feat-b{margin-top:16px}
+  .feat-th{margin-top:28px}
+  .feat-th button{width:44px;height:44px}
+  .sec{margin-top:64px}
+  .cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 var(--side);margin:0 calc(-1 * var(--side));padding:0 var(--side) 4px;gap:14px;scrollbar-width:none;overscroll-behavior-x:contain}
+  .cards::-webkit-scrollbar{display:none}
+  .card{flex:0 0 min(64vw,280px);scroll-snap-align:start}
+  .card-m b{font-size:21px}
+}
+/* Short landscape screens: photo and text side by side, sized to the screen */
+@media (max-height:500px) and (min-width:560px){
+  .feat{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,1fr);height:calc(100dvh - var(--head-h) - 28px);gap:28px}
+  .feat-ph{margin:0;width:100%;height:100%;aspect-ratio:auto;max-height:none}
+  .feat-t{font-size:min(64px,16vh)}
+  .feat-th{display:none}
+}
+@media (prefers-reduced-motion:reduce){.feat-ph .kp img{transition:opacity .45s;transform:none!important}}
+
+/* All: the sideways wall */
+.room{position:absolute;inset:0 0 calc(env(safe-area-inset-bottom,0px) + 72px) 0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;cursor:grab;user-select:none;-webkit-user-select:none;overscroll-behavior-x:contain}
+.room::-webkit-scrollbar{display:none}
+.room.dragging{cursor:grabbing}.room.dragging *{pointer-events:none}
+.room img{-webkit-user-drag:none;pointer-events:none}
+@media (pointer:coarse){.room{cursor:auto}}
+.wall{display:flex;flex-direction:column;justify-content:center;gap:var(--gap);height:100%;box-sizing:border-box;width:max-content;
+  padding:12px max(var(--side),env(safe-area-inset-right,0px)) 12px max(var(--side),env(safe-area-inset-left,0px));--gap:22px}
+@media (max-width:600px){.wall{--gap:14px}}
+.row{display:flex;gap:var(--gap)}
+.tile{appearance:none;border:0;padding:0;background:none;flex:none;cursor:inherit;display:block}
+.tile .kp{width:100%;height:100%}
+/* Position rail: a short hairline under the wall; the darker part is what's on screen */
+.track{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(-50%);width:min(320px,64vw);padding:14px 0;cursor:pointer;touch-action:none;transition:opacity .3s}
+.track::before{content:"";display:block;height:3px;border-radius:2px;background:#e8e8eb}
+.track i{position:absolute;top:14px;left:0;height:3px;border-radius:2px;background:#9ea1a6;transition:background-color .2s}
+@media (hover:hover){.track:hover i{background:#7f8287}}
+.track.held i{background:#6c6f74}
+.track.still{opacity:0;pointer-events:none}
+.ghint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 44px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;color:var(--ink-3);pointer-events:none;white-space:nowrap;transition:opacity .5s}
+.ghint svg{animation:nudge 1.6s ease-in-out infinite}
+.ghint.gone,.track.still+.ghint{opacity:0}
+@media (max-width:600px){
+  .room{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 44px)!important}
+  .track{bottom:calc(env(safe-area-inset-bottom,0px) * .5);padding:8px 0}
+  .track i{top:8px}
+  .ghint{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 24px)}
+}
+@media (max-width:600px){
+  .pages{bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 48px)!important}
+  .fbot{height:calc(env(safe-area-inset-bottom,0px) * .5 + 48px)!important;padding-bottom:calc(env(safe-area-inset-bottom,0px) * .5 + 14px)!important;align-items:flex-end}
+  .dot{padding:10px 3px 12px}
+}
+@media (prefers-reduced-motion:reduce){.ghint svg{animation:none}}
+
+/* Focused collection: pages that snap */
+.pages{position:absolute;left:0;right:0;top:0;bottom:calc(var(--fbot,56px) + env(safe-area-inset-bottom,0px));display:flex;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;user-select:none;-webkit-user-select:none;cursor:grab}
+.pages::-webkit-scrollbar{display:none}
+.pages.dragging{cursor:grabbing;scroll-snap-type:none}.pages.dragging *{pointer-events:none}
+.pages.locked{overflow:hidden}
+@media (pointer:coarse){.pages{cursor:auto}}
+.pg{flex:0 0 100%;min-width:0;max-width:100%;overflow:hidden;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:2vh max(20px,env(safe-area-inset-left,0px),4vw) 2vh max(20px,env(safe-area-inset-right,0px),4vw);gap:max(16px,3vw)}
+.fr{margin:0;display:flex;flex-direction:column;flex:none;container-type:inline-size}
+.ph{position:relative;overflow:hidden;touch-action:pan-x;background:var(--soft) center/cover}
+.ph.zoomed{touch-action:none;overflow:visible;z-index:2;cursor:move}
+@media (pointer:fine){.ph{cursor:zoom-in}.ph.zoomed{cursor:zoom-out}}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:0 0;opacity:0;transition:opacity .5s;-webkit-user-drag:none;user-select:none}
+.ph img.in{opacity:1}
+.ph picture{display:contents}
+/* Caption: number, then what's known about the exposure. Unknown fields are simply left out. */
+.fr figcaption{display:grid;grid-template-columns:auto 1fr auto;column-gap:14px;row-gap:7px;align-items:baseline;margin-top:14px;height:38px;white-space:nowrap;overflow:hidden}
+.fr figcaption .no{grid-row:1/3;font:400 22px/1 var(--serif);font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.01em}
+.fr figcaption .cam{font:italic 400 16px/1 var(--serif);overflow:hidden;text-overflow:ellipsis}
+.fr figcaption .set{grid-column:2/4;font:400 10.5px/1 var(--mono);letter-spacing:.04em;color:var(--ink-2);display:flex;gap:14px}
+.fr figcaption .none{font:400 10.5px/1 var(--mono);letter-spacing:.04em;color:var(--ink-3)}
+@container (max-width:520px){
+  .fr figcaption{height:auto;min-height:38px}
+  .fr figcaption .cr{order:3;grid-column:2/4;justify-self:start!important;max-width:100%!important}
+  .fr figcaption .set{order:2}
+  .fr figcaption .set,.fr figcaption .none{grid-column:2/4!important}
+}
+@media (max-height:500px){.fr figcaption{margin-top:8px;row-gap:5px;min-height:0!important}.fr figcaption .no{font-size:18px}.fr figcaption .cam{font-size:14px}.fr figcaption .cr{display:none}}
+.fr figcaption .cr{font:400 10px/1 var(--mono);color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;max-width:46vw;justify-self:end}
+.opener{flex-direction:column;align-items:flex-start;justify-content:center;padding-inline:max(24px,calc((100% - 1100px) / 2))}
+.opener h2{margin:0;font:400 min(clamp(52px,10vw,140px),19vh)/.9 var(--serif);letter-spacing:-.03em}
+.opener p{margin:min(18px,2.5vh) 0 0;color:var(--ink-2);font:400 12px/1.7 var(--mono)}
+.opener .go{margin-top:min(28px,4vh);display:flex;align-items:center;gap:10px;color:var(--ink)}
+.opener .go svg{animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(6px)}}
+.fbot{position:absolute;left:0;right:0;bottom:0;height:calc(var(--fbot,56px) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;align-items:center;justify-content:center;gap:6px}
+.dot{appearance:none;border:0;padding:10px 3px;background:none;cursor:pointer}
+.dot i{display:block;width:6px;height:6px;border-radius:3px;background:var(--rail);transition:width .3s,background .3s}
+.dot[aria-current="true"] i{width:22px;background:var(--ink)}
+.arrow{position:absolute;top:50%;z-index:3;transform:translateY(-50%);appearance:none;border:0;width:44px;height:44px;border-radius:50%;background:var(--soft);display:grid;place-items:center;cursor:pointer;transition:opacity .2s}
+.arrow:disabled{opacity:0;pointer-events:none}
+.arrow{transition:opacity .2s,background-color .2s,transform .2s}.arrow.hot{background:#e6e7e9}.arrow.l.hot{transform:translateY(-50%) translateX(-2px)}.arrow.r.hot{transform:translateY(-50%) translateX(2px)}
+.arrow.l{left:max(12px,env(safe-area-inset-left,0px))}.arrow.r{right:max(12px,env(safe-area-inset-right,0px))}
+@media (pointer:coarse){.arrow{display:none}}
+.view .arrow{top:calc(50% - 28px)}
+#vGrid .arrow{top:calc(50% - 14px)}
+@media (prefers-reduced-motion:reduce){.opener .go svg{animation:none}}
+</style>
+
+<div class="draft" aria-hidden="true">Draft</div>
+<header class="top">
+  <button class="imp" id="imp" aria-label="Terrell V. Photography, home"><span class="sig">Terrell V.</span><small>Photography</small></button>
+  <nav class="tabs mono" id="tabs" role="tablist" aria-label="Collections"><i id="tabI"></i></nav>
+  <span class="count mono" id="count"></span>
+</header>
+
+<main class="view" id="vHome">
+  <div class="home">
+    <section class="feat" aria-label="Featured collection">
+      <button class="feat-ph" id="featPh"></button>
+      <div class="feat-tx">
+        <p class="eyebrow mono">Featured collection</p>
+        <h1 class="feat-t" id="featT"></h1>
+        <p class="feat-b" id="featB"></p>
+        <button class="cta mono" id="featGo"></button>
+        <div class="feat-th" id="featTh"></div>
+      </div>
+    </section>
+    <h2 class="sec mono"><span>Collections</span><button class="link mono" id="allLink"></button></h2>
+    <div class="cards" id="cards"></div>
+    <footer class="foot"><span class="sig">Terrell V.</span><span class="mono" id="year"></span></footer>
+  </div>
+</main>
+
+<main class="view" id="vGrid" hidden>
+  <div class="room" id="room" tabindex="0" aria-label="All photographs. Drag, swipe or scroll to move sideways."><div class="wall" id="wall"></div></div>
+  <div class="track" id="track" aria-hidden="true"><i id="trackI"></i></div>
+  <div class="ghint mono" id="ghint" aria-hidden="true"><span id="ghintT">Swipe</span><svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></div>
+  <button class="arrow l" id="gprev" aria-label="Scroll back"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"/></svg></button>
+  <button class="arrow r" id="gnext" aria-label="Scroll forward"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 1l6 6-6 6"/></svg></button>
+</main>
+
+<main class="view" id="vSpread" hidden aria-label="Collection">
+  <div class="pages" id="pages" tabindex="0"></div>
+  <button class="arrow l" id="prev" aria-label="Previous page"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"/></svg></button>
+  <button class="arrow r" id="next" aria-label="Next page"><svg width="9" height="14" viewBox="0 0 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 1l6 6-6 6"/></svg></button>
+  <nav class="fbot" id="dots" aria-label="Pages"></nav>
+</main>
+
+<script src="photos.js"></script>
+<script src="kit.js"></script>
+<script>
+const { P, pic, wrap, zoomable, notes, haptic, reduce } = Kit;
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const coarse = matchMedia('(pointer:coarse)').matches;
+const BLURBS = {
+  City: 'Streets after rain, long shadows and the geometry of crossings.',
+  People: 'Strangers caught mid-moment, at work and at rest.',
+  Architecture: 'Facades, doors and windows, and the light that falls on them.'
+};
+const COLS = [
+  { title: 'Recents', blurb: 'The newest work, latest first.', items: [...P].reverse() },
+  ...[...new Set(P.map(p => p.collection))].map(c => ({ title: c, blurb: BLURBS[c] || `${c} photographs.`, items: P.filter(p => p.collection === c) }))
+];
+// The collection that leads the home page
+const FEATURED = 'City', FI = Math.max(0, COLS.findIndex(c => c.title === FEATURED));
+const ALL = { title: 'All photographs', blurb: 'Everything, in order.', items: P };
+const ARROW = '<svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg>';
+
+/* ---------- Home ---------- */
+const F = COLS[FI], slides = F.items.slice(0, 6);
+$('featT').textContent = F.title;
+$('featB').textContent = `${F.blurb} ${F.items.length} photographs.`;
+$('featGo').innerHTML = `Open collection ${ARROW}`;
+$('featPh').setAttribute('aria-label', `Open ${F.title}`);
+const layers = slides.map((p, k) => { const d = pic(p, { ratio: false, eager: k < 2, large: true }); $('featPh').appendChild(d); return d; });
+const thumbs = slides.map((p, k) => {
+  const b = document.createElement('button'); b.setAttribute('aria-label', `Show photograph ${k + 1}`);
+  b.appendChild(pic(p, { ratio: false, eager: true })); b.onclick = () => { showSlide(k); restartSlides(); };
+  $('featTh').appendChild(b); return b;
+});
+$('featTh').insertAdjacentHTML('beforeend', '<span class="feat-n mono" id="featN"></span>');
+let slide = 0, slideT = 0;
+function showSlide(k) {
+  slide = (k + slides.length) % slides.length;
+  layers.forEach((l, i) => l.classList.toggle('on', i === slide)); thumbs.forEach((t, i) => t.classList.toggle('on', i === slide));
+  $('featN').textContent = `${pad(slide + 1)} / ${pad(slides.length)}`;
+}
+// Slow crossfade through the featured collection while home is on screen
+function restartSlides() { clearInterval(slideT); if (!reduce && slides.length > 1) slideT = setInterval(() => { if (state.v === 'home' && !document.hidden) showSlide(slide + 1); }, 5600); }
+showSlide(0); restartSlides();
+$('featPh').onclick = () => go({ v: 'spread', c: FI, at: slide });
+$('featGo').onclick = () => go({ v: 'spread', c: FI });
+$('allLink').innerHTML = `All ${P.length} photographs ${ARROW}`;
+$('allLink').onclick = () => go({ v: 'grid' });
+$('year').textContent = `Photography · ${new Date().getFullYear()}`;
+const card = (title, n, cover, onclick) => {
+  const b = document.createElement('button'); b.className = 'card'; b.setAttribute('aria-label', `Open ${title}, ${n} photographs`);
+  b.appendChild(cover); b.insertAdjacentHTML('beforeend', `<div class="card-m"><b>${title}</b><span class="go mono">${n} ${ARROW}</span></div>`);
+  b.onclick = onclick; $('cards').appendChild(b);
+};
+COLS.forEach((c, ci) => {
+  if (ci === FI) return;
+  const cv = document.createElement('div'); cv.className = 'cv'; cv.appendChild(pic(c.items[0], { ratio: false }));
+  card(c.title, c.items.length, cv, () => go({ v: 'spread', c: ci }));
+});
+{ const cv = document.createElement('div'); cv.className = 'cv mos'; P.slice(0, 4).forEach(p => cv.appendChild(pic(p, { ratio: false })));
+  card('All photographs', P.length, cv, () => go({ v: 'grid' })); }
+
+/* ---------- Tabs and navigation ---------- */
+const tabs = ['All', ...COLS.map(c => c.title)].map((t, k) => {
+  const b = document.createElement('button'); b.role = 'tab'; b.textContent = t; b.setAttribute('aria-selected', 'false');
+  b.onclick = () => { haptic(5); go(k === 0 ? { v: 'grid' } : { v: 'spread', c: k - 1 }); };
+  $('tabs').appendChild(b); return b;
+});
+let state = { v: 'home' };
+const tabOf = s => s.v === 'grid' || (s.v === 'spread' && s.c < 0) ? 0 : s.v === 'spread' ? s.c + 1 : -1;
+function markTab() {
+  const t = tabOf(state), i = $('tabI');
+  tabs.forEach((b, k) => b.setAttribute('aria-selected', k === t));
+  if (t < 0) { i.style.opacity = 0; return; }
+  const b = tabs[t]; i.style.opacity = 1; i.style.width = b.offsetWidth + 'px'; i.style.transform = `translateX(${b.offsetLeft}px)`;
+  const bar = $('tabs'); if (bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: b.offsetLeft - (bar.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
+}
+const views = { home: $('vHome'), grid: $('vGrid'), spread: $('vSpread') };
+// From home, a view is pushed so Back returns there; switching between collections replaces, so Back always means home.
+function go(s, mode) {
+  const prev = state; state = s;
+  mode = mode || (prev.v === 'home' || (s.v === 'spread' && s.c < 0) ? 'push' : 'replace');
+  if (s.v === 'home' && mode !== 'none') mode = 'replace';
+  try { if (mode === 'push') history.pushState(s, ''); else if (mode === 'replace') history.replaceState(s, ''); } catch (e) {}
+  document.body.dataset.v = s.v;
+  Object.entries(views).forEach(([k, el]) => el.hidden = k !== s.v);
+  stopGlide();
+  if (s.v === 'grid') { hang(); syncGrid(); room.focus({ preventScroll: true }); peek(); }
+  if (s.v === 'spread') openSpread(s.c < 0 ? ALL : COLS[s.c], s.at);
+  if (s.v === 'home') $('count').textContent = '';
+  if (!reduce && (prev.v !== s.v || prev.c !== s.c)) views[s.v].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+  markTab();
+}
+$('imp').onclick = () => go({ v: 'home' });
+addEventListener('popstate', e => go(e.state || { v: 'home' }, 'none'));
+try { history.replaceState({ v: 'home' }, ''); } catch (e) {}
+document.body.dataset.v = 'home';
+
+/* ---------- All: the wall ---------- */
+const room = $('room'), wall = $('wall');
+const tiles = P.map((p, i) => {
+  const b = document.createElement('button'); b.className = 'tile'; b.setAttribute('aria-label', `Photograph ${pad(i + 1)}. Open`);
+  b.appendChild(pic(p, { ratio: false, eager: i < 12 }));
+  b.onclick = e => { if (gMoved) return e.preventDefault(); go({ v: 'spread', c: -1, at: i }); };
+  return b;
+});
+function hang() {
+  if ($('vGrid').hidden) return;
+  const cs = getComputedStyle(wall), gap = parseFloat(cs.getPropertyValue('--gap'));
+  // Rows sized for a comfortable tile height (about 300px, less on phones); one row on short landscape screens.
+  // If everything would fit without scrolling, drop a row so there's still a wall to slide through.
+  const avail = room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), target = innerWidth < 600 ? 220 : 300;
+  let n = Math.max(1, Math.min(3, Math.round((avail + gap) / (target + gap)))), H, rows;
+  for (; n >= 1; n--) {
+    H = Math.floor((room.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - gap * (n - 1)) / n);
+    rows = Array.from({ length: n }, () => { const r = document.createElement('div'); r.className = 'row'; r.w = 0; return r; });
+    P.forEach((p, i) => { const w = Math.round(H * p.w / p.h), r = rows.reduce((a, b) => b.w < a.w ? b : a); tiles[i].style.width = w + 'px'; tiles[i].style.height = H + 'px'; r.appendChild(tiles[i]); r.w += w + gap; });
+    if (n === 1 || Math.max(...rows.map(r => r.w)) > room.clientWidth * 1.2 || H * (n - 1) > avail * .75) break;
+  }
+  wall.replaceChildren(...rows);
+}
+$('ghintT').textContent = coarse ? 'Swipe' : 'Drag or scroll';
+// The first time the wall opens on a touch screen, it slides a little and back to show it moves sideways
+let peeked = false;
+function peek() {
+  if (peeked || !coarse || reduce) return; peeked = true;
+  setTimeout(() => { if (state.v !== 'grid' || room.scrollLeft > 4) return; glideBy(56); setTimeout(() => state.v === 'grid' && glideBy(-56), 520); }, 650);
+}
+function syncGrid() {
+  if (state.v !== 'grid') return;
+  const max = room.scrollWidth - room.clientWidth, L0 = room.scrollLeft, R0 = L0 + room.clientWidth;
+  const T = $('track'), Tw = T.clientWidth, SW = Math.max(1, room.scrollWidth);
+  T.classList.toggle('still', max <= 1);
+  if (L0 > 60) $('ghint').classList.add('gone');
+  $('trackI').style.width = Tw * room.clientWidth / SW + 'px'; $('trackI').style.transform = `translateX(${Tw * L0 / SW}px)`;
+  $('gprev').disabled = L0 <= 2; $('gnext').disabled = L0 >= max - 2;
+  const vis = tiles.map((t, i) => (t.offsetLeft + t.offsetWidth > L0 && t.offsetLeft < R0) ? i : -1).filter(i => i >= 0);
+  if (vis.length) $('count').textContent = `${pad(Math.min(...vis) + 1)}–${pad(Math.max(...vis) + 1)} / ${pad(P.length)}`;
+}
+room.addEventListener('scroll', () => requestAnimationFrame(syncGrid), { passive: true });
+let gDrag = null, gMoved = false, gRaf = 0, gTarget = null;
+room.addEventListener('dragstart', e => e.preventDefault());
+room.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button) return; e.preventDefault(); cancelAnimationFrame(gRaf); gDrag = { x: e.clientX, l: room.scrollLeft, t: performance.now(), vx: 0, lx: e.clientX }; gMoved = false; });
+addEventListener('pointermove', e => {
+  if (!gDrag) return; const dx = e.clientX - gDrag.x;
+  if (!gMoved && Math.abs(dx) > 5) { gMoved = true; room.classList.add('dragging'); }
+  if (!gMoved) return; room.scrollLeft = gDrag.l - dx;
+  const now = performance.now(); gDrag.vx = .8 * ((e.clientX - gDrag.lx) / Math.max(1, now - gDrag.t)) + .2 * gDrag.vx; gDrag.lx = e.clientX; gDrag.t = now;
+});
+addEventListener('pointerup', () => {
+  if (!gDrag) return; let vx = gDrag.vx * 16; gDrag = null; room.classList.remove('dragging');
+  if (!reduce) { const step = () => { if (Math.abs(vx) < .4) return; room.scrollLeft -= vx; vx *= .94; gRaf = requestAnimationFrame(step); }; gRaf = requestAnimationFrame(step); }
+  setTimeout(() => gMoved = false, 0);
+});
+room.addEventListener('wheel', e => {
+  if (e.ctrlKey) return; e.preventDefault(); cancelAnimationFrame(gRaf);
+  const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX, max = room.scrollWidth - room.clientWidth;
+  glideBy(d * (e.deltaMode === 1 ? 32 : 1), max);
+}, { passive: false });
+function glideBy(d, max = room.scrollWidth - room.clientWidth) {
+  gTarget = Math.max(0, Math.min(max, (gTarget ?? room.scrollLeft) + d));
+  const glide = () => { const diff = gTarget - room.scrollLeft; if (Math.abs(diff) < .5) { room.scrollLeft = gTarget; gTarget = null; return; } room.scrollLeft += diff * .18; gRaf = requestAnimationFrame(glide); };
+  cancelAnimationFrame(gRaf); if (reduce) { room.scrollLeft = gTarget; gTarget = null; } else gRaf = requestAnimationFrame(glide);
+}
+// Drag or click the rail to move through the wall
+let tHeld = null;
+const tTo = x => { const r = $('track').getBoundingClientRect(); room.scrollLeft = (x - r.left - tHeld) / r.width * room.scrollWidth; };
+$('track').addEventListener('pointerdown', e => {
+  cancelAnimationFrame(gRaf); gTarget = null; $('track').setPointerCapture(e.pointerId); $('track').classList.add('held');
+  const k = $('trackI').getBoundingClientRect(), on = e.clientX >= k.left && e.clientX <= k.right;
+  tHeld = on ? e.clientX - k.left : k.width / 2; if (!on) tTo(e.clientX);
+});
+$('track').addEventListener('pointermove', e => tHeld != null && tTo(e.clientX));
+const tRel = () => { tHeld = null; $('track').classList.remove('held'); };
+$('track').addEventListener('pointerup', tRel); $('track').addEventListener('pointercancel', tRel);
+$('gprev').onclick = () => glideBy(-room.clientWidth * .8);
+$('gnext').onclick = () => glideBy(room.clientWidth * .8);
+
+/* ---------- Focused collection ---------- */
+const focus = $('focus'), pagesEl = $('pages');
+let cur = null, pages = [], zooms = [];
+// Group photos into pages: a landscape photo gets a page to itself; on wide screens two portraits share one.
+// Two portraits share a page only when the screen is wide enough to show both at full height.
+function compose(items) {
+  const W = innerWidth * .92 - 40, H = Math.max(200, innerHeight - (innerHeight <= 500 ? 52 : innerWidth <= 760 ? 100 : 72) - 56 - capH() - innerHeight * .04), out = [];
+  for (let i = 0; i < items.length; i++) {
+    const p = items[i], q = items[i + 1];
+    if (p.h > p.w && q && q.h > q.w && (p.w / p.h + q.w / q.h) * H <= W) { out.push([i, i + 1]); i++; } else out.push([i]);
+  }
+  return out;
+}
+function render() {
+  const items = cur.items; pages = compose(items); zooms = [];
+  pagesEl.innerHTML = `<section class="pg opener"><h2>${cur.title}</h2><p>${items.length} photographs · ${pages.length} pages<br>${cur.blurb}</p><span class="go mono">Drag or swipe <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></span></section>`;
+  pages.forEach(group => {
+    const s = document.createElement('section'); s.className = 'pg';
+    group.forEach(k => {
+      const p = items[k], f = document.createElement('figure'); f.className = 'fr'; f.dataset.k = k;
+      const box = document.createElement('div'); box.className = 'ph'; box.style.backgroundImage = `url(${p.lqip})`;
+      const img = new Image(); img.alt = `${p.title}, ${p.place}`; img.decoding = 'async'; img.loading = 'lazy';
+      img.onload = () => img.classList.add('in'); box.appendChild(wrap(img, p, true));
+      f.appendChild(box);
+      f.insertAdjacentHTML('beforeend', caption(p, k));
+      s.appendChild(f);
+      zooms.push(zoomable(box, img, z => pagesEl.classList.toggle('locked', z)));
+    });
+    pagesEl.appendChild(s);
+  });
+  $('dots').innerHTML = [...pagesEl.children].map((_, i) => `<button class="dot" aria-label="Page ${i + 1}"><i></i></button>`).join('');
+  [...$('dots').children].forEach((d, i) => d.onclick = () => goTo(i));
+  fit();
+}
+// Room kept under each photo for its caption: three lines where photos are narrow, two otherwise.
+const capH = () => innerHeight <= 500 ? 44 : innerWidth < 700 ? 76 : 56;
+// Size every photo as large as its page allows, keeping true proportions.
+function fit() {
+  [...pagesEl.children].forEach(s => {
+    const frs = [...s.querySelectorAll('.fr')]; if (!frs.length) return;
+    const cs = getComputedStyle(s), gap = parseFloat(cs.columnGap) || 0;
+    const W = pagesEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - gap * (frs.length - 1);
+    const H = pagesEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - capH();
+    const sum = frs.reduce((a, f) => { const p = cur.items[+f.dataset.k]; return a + p.w / p.h; }, 0);
+    const h = Math.min(H, W / sum);
+    frs.forEach(f => { const p = cur.items[+f.dataset.k], box = f.querySelector('.ph'); box.style.height = h + 'px'; box.style.width = (h * p.w / p.h) + 'px'; f.style.width = box.style.width; });
+  });
+}
+const idx = () => Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+function syncFocus() {
+  const i = idx(), n = pagesEl.children.length;
+  $('count').textContent = `${pad(i + 1)} / ${pad(n)}`;
+  [...$('dots').children].forEach((d, k) => d.setAttribute('aria-current', k === i));
+  $('prev').disabled = i === 0; $('next').disabled = i === n - 1;
+}
+let lastI = 0;
+pagesEl.addEventListener('scroll', () => { requestAnimationFrame(syncFocus); const i = idx(); if (i !== lastI) { zooms.forEach(z => z.zoomed && z.reset()); lastI = i; haptic(4); } }, { passive: true });
+function caption(p, k) {
+  const set = [p.mm && `${p.mm}mm`, p.iso && `ISO ${p.iso}`, p.shutter && `${p.shutter}s`, p.f && `ƒ/${p.f}`].filter(Boolean).map(v => `<span>${v}</span>`).join('');
+  const credit = p.place ? `<span class="cr">${p.place.replace(/^Photo by /, '')}</span>` : '';
+  let body;
+  if (p.camera) body = `<span class="cam">${p.camera}</span>${credit}${set ? `<span class="set">${set}</span>` : ''}`;
+  else if (set) body = `<span class="set" style="grid-column:2">${set}</span>${credit}`;
+  else body = `<span class="none">Settings not recorded</span>${credit}`;
+  return `<figcaption><span class="no">${pad(k + 1)}</span>${body}</figcaption>`;
+}
+// One glide owns every programmatic move: snapping is off while it runs, and it starts from wherever the page is
+// (mid-drag included) at the hand's speed, easing into the page instead of replaying a full page turn.
+let gRun = null;
+function stopGlide() { if (!gRun) return; cancelAnimationFrame(gRun.raf); gRun = null; pagesEl.style.scrollSnapType = ''; }
+function goTo(i, v = 0) {
+  const n = pagesEl.children.length, W = pagesEl.clientWidth; i = Math.max(0, Math.min(n - 1, i));
+  stopGlide();
+  const from = pagesEl.scrollLeft, to = i * W, d = to - from;
+  if (reduce || Math.abs(d) < 1) { pagesEl.scrollLeft = to; return; }
+  // easeOutCubic starts at slope 3d/T, so pick T to match the release speed (px/ms); otherwise scale with distance
+  const toward = v && Math.sign(v) === Math.sign(d) ? Math.abs(v) : 0;
+  const T = toward ? Math.max(180, Math.min(520, 3 * Math.abs(d) / toward)) : Math.max(260, Math.min(560, 260 + Math.abs(d) / W * 300));
+  const t0 = performance.now();
+  pagesEl.style.scrollSnapType = 'none';
+  const run = gRun = { i, raf: 0 };
+  const step = now => {
+    if (gRun !== run) return;
+    const k = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - k, 3);
+    pagesEl.scrollLeft = from + d * e;
+    if (k < 1) run.raf = requestAnimationFrame(step); else { gRun = null; pagesEl.style.scrollSnapType = ''; }
+  };
+  run.raf = requestAnimationFrame(step);
+}
+const aim = () => gRun ? gRun.i : idx();
+$('prev').onclick = () => goTo(aim() - 1); $('next').onclick = () => goTo(aim() + 1);
+pagesEl.addEventListener('touchstart', stopGlide, { passive: true });
+
+// The empty space beside a page's photos turns it: left of the leftmost photo goes back, right of the rightmost goes forward.
+// Photos themselves do nothing on click. The title page splits at its middle.
+function zone(x) {
+  const pg = pagesEl.children[aim()]; if (!pg) return 0;
+  const frs = pg.querySelectorAll('.fr');
+  if (!frs.length) { const r = pg.getBoundingClientRect(); return x < r.left + r.width / 2 ? -1 : 1; }
+  const L = frs[0].getBoundingClientRect().left, R = frs[frs.length - 1].getBoundingClientRect().right;
+  return x < L ? -1 : x > R ? 1 : 0;
+}
+let dragJust = false;
+pagesEl.addEventListener('click', e => {
+  if (dragJust || zooms.some(z => z.zoomed) || e.target.closest('.fr')) return;
+  const z = zone(e.clientX); if (z) goTo(aim() + z);
+});
+pagesEl.addEventListener('mousemove', e => {
+  if (fd) return; const z = e.target.closest('.fr') ? 0 : zone(e.clientX), i = aim(), n = pagesEl.children.length;
+  const back = z < 0 && i > 0, fwd = z > 0 && i < n - 1;
+  pagesEl.style.cursor = back || fwd ? 'pointer' : '';
+  $('prev').classList.toggle('hot', back); $('next').classList.toggle('hot', fwd);
+});
+pagesEl.addEventListener('mouseleave', () => { $('prev').classList.remove('hot'); $('next').classList.remove('hot'); });
+function openSpread(c, photoIndex) {
+  cur = c; render();
+  const pi = photoIndex != null ? pages.findIndex(g => g.includes(photoIndex)) + 1 : 0;
+  pagesEl.style.scrollSnapType = 'none'; pagesEl.scrollLeft = pi * pagesEl.clientWidth; pagesEl.style.scrollSnapType = '';
+  lastI = pi; syncFocus(); pagesEl.focus({ preventScroll: true });
+}
+
+// Mouse drag between pages: follows the hand, then settles on the nearest page (a quick flick moves one page).
+let fd = null;
+pagesEl.addEventListener('dragstart', e => e.preventDefault());
+pagesEl.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' || e.button || zooms.some(z => z.zoomed)) return; e.preventDefault(); stopGlide(); const now = performance.now(); fd = { x: e.clientX, l: pagesEl.scrollLeft, i: idx(), t: now, moved: false, hx: [[now, e.clientX]] }; });
+addEventListener('pointermove', e => {
+  if (!fd) return; const dx = e.clientX - fd.x;
+  if (!fd.moved && Math.abs(dx) > 4) { fd.moved = true; pagesEl.classList.add('dragging'); }
+  if (fd.moved) pagesEl.scrollLeft = fd.l - dx;
+  const now = performance.now(); fd.hx.push([now, e.clientX]); while (fd.hx.length > 2 && now - fd.hx[0][0] > 90) fd.hx.shift();
+});
+addEventListener('pointerup', e => {
+  if (!fd) return; const dx = e.clientX - fd.x, W = pagesEl.clientWidth, start = fd.i, moved = fd.moved, h = fd.hx, now = performance.now(); fd = null;
+  if (!moved) return;
+  dragJust = true; setTimeout(() => dragJust = false, 0);
+  // Release speed from the last ~90ms of movement, in scroll direction (px/ms)
+  const [t1, x1] = h[0], v = now - t1 > 0 && now - h[h.length - 1][0] < 120 ? -(e.clientX - x1) / (now - t1) : 0;
+  let target = start;
+  if (Math.abs(dx) > W * .12 || Math.abs(v) > .4) target = start + (v ? Math.sign(v) : dx < 0 ? 1 : -1);
+  goTo(target, v); pagesEl.classList.remove('dragging');
+});
+// Wheel and trackpad: one page per gesture. A gesture ends after a short pause, so a trackpad's
+// momentum tail can't trigger a second turn mid-glide; a fresh, harder push starts a new one.
+let wLast = 0, wAcc = 0, wArmed = true, wFired = 0, wPrev = 0;
+pagesEl.addEventListener('wheel', e => {
+  if (e.ctrlKey) return; e.preventDefault();
+  const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX, now = performance.now();
+  if (now - wLast > 180 || (now - wFired > 450 && Math.abs(d) > Math.abs(wPrev) * 1.6 && Math.abs(d) > 24)) { wArmed = true; wAcc = 0; }
+  wLast = now; wPrev = d;
+  if (!wArmed) return; wAcc += d;
+  if (Math.abs(wAcc) > 30) { goTo(aim() + Math.sign(wAcc)); wArmed = false; wFired = now; }
+}, { passive: false });
+addEventListener('keydown', e => {
+  if (state.v === 'spread') {
+    if (e.key === 'ArrowRight') { e.preventDefault(); goTo(aim() + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(aim() - 1); }
+  }
+  if (state.v === 'grid') {
+    if (e.key === 'ArrowRight') { e.preventDefault(); glideBy(room.clientWidth * .5); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); glideBy(-room.clientWidth * .5); }
+  }
+  if (e.key === 'Escape' && state.v !== 'home') { state.v === 'spread' && state.c < 0 ? history.back() : go({ v: 'home' }); }
+});
+addEventListener('resize', () => {
+  if (state.v === 'grid') { hang(); syncGrid(); }
+  if (state.v === 'spread') { stopGlide(); const i = idx(); const was = pages.length; const n = compose(cur.items).length; if (n !== was) render(); else fit(); pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; syncFocus(); }
+  markTab();
+});
+document.fonts && document.fonts.ready.then(markTab);
+
+</script>
+
+</html>

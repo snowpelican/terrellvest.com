@@ -8,7 +8,7 @@ For more info on the development of this site, view [the writeup](https://terrel
 
 ## Development Notes
 
-To build this site use either of the commands listed below. The gulp task will build the entire site, and start the development server. Pushing changes to master will automatically update the live site.
+To build this site use either of the commands listed below. The gulp task will build the entire site, and start the development server. Deployed to Cloudflare as a static site: `wrangler.jsonc` serves the prebuilt `_dist/` folder with no build step. Vercel deployments are turned off in `vercel.json`.
 ```sh
 npm run dev
 ```
@@ -16,3 +16,11 @@ or
 ```sh
 gulp
 ```
+
+## Photography (`/photography`)
+
+A standalone gallery served from `_dist/photography/` (plain HTML/JS, not part of the gulp build).
+
+- `index.html` is the page; `photos.js` lists the photos; `kit.js` is the shared UI helpers; `p/` holds the images.
+- To add your own photos, run `python3 _src/photography/optimize.py SRC_DIR [credits.json]` and copy the generated `p/` folder and `photos.js` into `_dist/photography/`. Camera, focal length, ISO, shutter and aperture are read from each file's EXIF; anything missing shows as "Settings not recorded".
+- The images currently there are greyscale gradient placeholders, and the page shows a "Draft" badge (remove the `.draft` element in `index.html` when going live with real photos).

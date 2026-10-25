@@ -35,3 +35,4 @@ highlight
 *.css.map
 
 _drafts
+.wrangler
