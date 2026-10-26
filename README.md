@@ -4,7 +4,7 @@ The source of terrellvest.com: a home page and a photography gallery, in plain H
 
 ## Development Notes
 
-There is no build step. Cloudflare serves the `_dist/` folder as it is (see `wrangler.jsonc`).
+There is no build step. Cloudflare serves the `_dist/` folder as it is (see `wrangler.jsonc`). `vercel.json` turns off Vercel deployments from GitHub.
 
 To see the site on this machine or on another device in your Tailscale network, run:
 ```sh
