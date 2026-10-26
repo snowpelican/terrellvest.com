@@ -5,5 +5,7 @@
   "assets": {
     "directory": "./_dist",
     "html_handling": "auto-trailing-slash"
-  }
+  },
+  // Lets `wrangler preview` (the deploy command for branches other than master) build a private preview of a branch
+  "previews": {}
 }
