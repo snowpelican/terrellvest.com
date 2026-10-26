@@ -279,8 +279,10 @@ toggle.onclick = () => { setTheme(document.documentElement.dataset.theme === 'da
     render(now);
     raf = requestAnimationFrame(tick);
   }
+  // On a phone-sized screen the arrow stays still: no drawing back on a touch or a hover, and a tap just opens the page
+  const phone = matchMedia('(max-width:480px)');
   function set(m) {
-    if (mode === 'fly' || mode === 'stuck') return;
+    if (mode === 'fly' || mode === 'stuck' || (m === 'coil' && phone.matches)) return;
     mode = m;
     if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
   }
@@ -316,9 +318,8 @@ toggle.onclick = () => { setTheme(document.documentElement.dataset.theme === 'da
   cta.addEventListener('focus', () => { if (cta.matches(':focus-visible')) set('coil'); });
   cta.addEventListener('blur', () => set('rest'));
   cta.addEventListener('click', e => {
-    // A new tab or window (modifier keys, middle button) opens straight away. So does every tap on a phone-sized screen:
-    // there the arrow only draws back under the finger, and does not fly.
-    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || matchMedia('(max-width:480px)').matches) return;
+    // A new tab or window (modifier keys, middle button) opens straight away. So does every tap on a phone-sized screen.
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || phone.matches) return;
     e.preventDefault();
     if (mode !== 'fly' && mode !== 'stuck') launch();
   });
