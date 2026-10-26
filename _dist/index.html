@@ -1,52 +1,335 @@
-<!DOCTYPE HTML>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" type="image/png" href="assets/images/site-wide/favicon-logo.png">
-    <link rel="icon" type="image/gif" href="assets/images/site-wide/favicon-logo.png">
-    <link rel="icon" type="image/jpeg" href="assets/images/site-wide/favicon-logo.png">
-    <link rel="icon" type="image/vnd.microsoft.icon" href="assets/images/site-wide/favicon-logo.png">
-    <link href="assets/styles/grizzly/grid.css" rel="stylesheet" type="text/css">
-    <link href="assets/styles/main.css" rel="stylesheet" type="text/css">
-  </head>
-  <body>
-    <div class="page-wrapper">
-      <nav class="row nav-parent-row">
-        <box class="wrapper">
-          <div class="row center--col-x nav-wrapper-row">
-            <div class="box logo-box auto--width"> <a href="/" class="nav-logo-link">
-                <svg id="nav-logo-svg">
-                  <use xlink:href="assets/images/sprites/sprites.svg#logo"></use>
-                </svg></a></div>
-            <div class="box nav-list-box">
-              <div class="row nav-list"><a href="/" id="about-link" class="box nav-list-item-box auto--width active"><span class="nav-text-item">About</span></a><a href="/portfolio" id="portfolio-link" class="box nav-list-item-box auto--width inactive"><span class="nav-text-item">Portfolio</span></a><a href="/blog" id="blog-link" class="box nav-list-item-box auto--width inactive"><span class="nav-text-item">Blog</span></a><a href="/contact" id="contact-link" class="box nav-list-item-box auto--width inactive"><span class="nav-text-item">Contact</span></a></div>
-            </div>
-          </div>
-        </box>
-      </nav>
-      <main id="about-content" class="page-content">
-        <article class="about-section row center--col-x">
-          <div class="box wrapper">
-            <div class="row center--col-x center--col-y">
-              <div class="box xl--6-12 center--content">
-                <div class="profile-pic-wrapper"><img id="profile-pic" src="assets/images/Profile.jpg" alt="Profile image of Terrell Vest"></div>
-              </div>
-              <div class="box s--10-12 m--6-12 about-text-content">
-                <h1 class="about-name-heading">Terrell Vest</h1>
-                <div class="md-content"><p>I am a Finance major at San Diego State University, expected to graduate May 2018.</p>
-<p>View my <a href="/portfolio">portfolio</a> for a collection of my most recent work. An updated version of my <a href="https://www.dropbox.com/s/p66rsso84r0ch1k/Resume-Terrell_Vest-Sans_Personal_Info-Skills_Based.docx?dl=0" target="_blank">resume</a> is also available.</p>
-<p>On occasion, I write about several topics on my <a href="/blog">blog</a> - some technical, others personal.</p>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Terrell V.</title>
+<meta name="description" content="A collection of things Terrell V. has chosen to share: photography, and software.">
+<!-- Tab icon: the TV mark, black when the device is in light mode and white in dark mode; the PNG is for browsers without SVG icons -->
+<link rel="icon" type="image/png" href="/assets/images/site-wide/favicon-logo.png">
+<link rel="icon" type="image/svg+xml" href="/assets/images/site-wide/tv-icon-black.svg" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/svg+xml" href="/assets/images/site-wide/tv-icon-white.svg" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" id="themeColor">
+<meta name="color-scheme" content="light dark" id="colorScheme">
+<script>
+// Theme: the device's light/dark setting (followed live if it changes), unless the visitor picked one with the toggle during this visit.
+// Same rules and storage key as /photography, so a pick carries between the two pages for the rest of the visit.
+// Runs before the page paints, so there's no flash of the wrong theme.
+(() => {
+  const q = matchMedia('(prefers-color-scheme: dark)'), root = document.documentElement;
+  let saved = null; try { saved = sessionStorage.getItem('theme'); } catch (e) {}
+  const apply = t => {
+    root.dataset.theme = t;
+    document.getElementById('colorScheme').content = t;
+    const old = document.getElementById('themeColor'), tc = old.cloneNode(); tc.content = t === 'dark' ? '#111213' : '#ffffff'; old.replaceWith(tc);
+    window.onTheme && window.onTheme(t);
+  };
+  apply(saved || (q.matches ? 'dark' : 'light'));
+  q.addEventListener('change', () => { if (!saved) apply(q.matches ? 'dark' : 'light'); });
+  // Picking the same theme as the device forgets the choice, so the page goes back to following the device
+  window.setTheme = t => { saved = t === (q.matches ? 'dark' : 'light') ? null : t; try { saved ? sessionStorage.setItem('theme', saved) : sessionStorage.removeItem('theme'); } catch (e) {} apply(t); };
+})();
+// Page changes slide only when the arrow pokes the Photography link (it leaves a note in sessionStorage); every other one is instant
+addEventListener('pagereveal', e => e.viewTransition && e.viewTransition.skipTransition());
+addEventListener('pageswap', e => {
+  let sent = false; try { sent = sessionStorage.getItem('arrive') === 'rise'; } catch (err) {}
+  if (e.viewTransition && !sent) e.viewTransition.skipTransition();
+});
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Home: a short signed note. Same type, colours and mark as /photography. */
+:root{
+  color-scheme:light;
+  --bg:#ffffff; --ink:#151617; --ink-2:#6a6e73; --ink-3:#a3a7ac; --line:#15161724;
+  --serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --side:max(24px,env(safe-area-inset-left,0px));
+  --col:min(34rem,calc(100% - 2 * var(--side)));
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111213; --ink:#ececed; --ink-2:#a3a7ac; --ink-3:#6f7378; --line:#ececed2e;
+}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
-      </main>
-      <footer class="site-footer"></footer>
-    </div>
-    <script src="assets/scripts/g_a_code.js"></script>
-  </body>
+/* The header spans the same column as the note, so the mark sits over the text's left edge and the toggle over its right edge */
+.top{display:flex;align-items:center;justify-content:space-between;height:60px;padding-top:env(safe-area-inset-top,0px);width:var(--col);margin:0 auto}
+.mark{display:block;padding:4px 0}
+.logo{display:block;height:18px;width:auto}.logo-d,[data-theme="dark"] .logo-l{display:none}[data-theme="dark"] .logo-d{display:block}
+.hr{display:flex;align-items:center;gap:22px}
+.nav{font:400 14px/1 var(--mono);color:var(--ink-2);text-decoration:none;padding:12px 0;transition:color .2s}
+@media (hover:hover){.nav:hover{color:var(--ink)}}
+.theme{appearance:none;border:0;background:none;padding:0;width:44px;height:44px;margin-right:-12px;display:grid;place-items:center;cursor:pointer;color:var(--ink-2);transition:color .2s}
+@media (hover:hover){.theme:hover{color:var(--ink)}}
+.theme .sun,[data-theme="dark"] .theme .moon{display:none}
+[data-theme="dark"] .theme .sun{display:block}
+
+/* The note sits a little above the middle of the screen, in a narrow column for comfortable reading */
+.note{--pf:clamp(18px,2.2vw,20px);flex:1;display:flex;flex-direction:column;justify-content:center;width:var(--col);margin:0 auto;padding:6vh 0 14vh;box-sizing:border-box}
+.note h1{margin:0 0 .9em;font:400 clamp(44px,8vw,64px)/1 var(--serif);letter-spacing:-.025em}
+.note p{margin:0 0 1.15em;font:400 var(--pf)/1.6 var(--serif);color:var(--ink)}
+.note p a{text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:var(--ink-3);transition:text-decoration-color .2s}
+@media (hover:hover){.note p a:hover{text-decoration-color:var(--ink)}}
+.sign{margin-top:1.6em}
+.note .sign p{margin:0}
+.note .sign .name{margin:.35em 0 .9em;font:italic 400 clamp(24px,3vw,28px)/1.1 var(--serif)}
+.note .date{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+/* For the skimmer: a clear way into the photography, under the note. The arrow is moved by the script at the bottom.
+   The space between the date and the label matches the space between the last paragraph and "Thanks for stopping by". */
+.cta{align-self:flex-start;margin-top:calc(1.75 * var(--pf) + 13px);display:inline-flex;align-items:center;gap:14px;padding:14px 0;
+  color:var(--ink);text-decoration:none;font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+/* Phones: the whole note and the button fit on one screen down to an iPhone SE with Safari's bars showing (375 x 553).
+   A smaller heading, slightly smaller and tighter text, the name and date on one line, and less empty space around the note.
+   The space between the date and the label still matches the space between the last paragraph and the signature. */
+@media (max-width:480px){
+  .top{height:52px}
+  .note{--pf:17px;padding:2vh 0 3vh}
+  .note h1{font-size:38px;margin-bottom:.5em}
+  .note p{line-height:1.5;margin-bottom:.8em}
+  .sign{margin-top:1em}
+  .note .sign .name{display:inline-block;margin:.25em 14px .2em 0}
+  .note .sign .date{display:inline-block}
+  .cta{margin-top:calc(1.3 * var(--pf) - 4.7px);padding:12px 0}
+}
+/* The arrow turns about its point */
+.cta svg{display:block;overflow:visible;transform-origin:38.6px 7px}
+@media (prefers-reduced-motion:no-preference){@view-transition{navigation:auto}}
+
+/* A quiet entrance: each part of the note rises into place, one after another */
+@media (prefers-reduced-motion:no-preference){
+  .note>*{animation:rise .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * 90ms + 80ms)}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="/" aria-label="Terrell V., home"><img class="logo logo-l" src="/photography/tv-mark-black.svg" alt="" height="18"><img class="logo logo-d" src="/photography/tv-mark-white.svg" alt="" height="18"></a>
+  <div class="hr">
+  <a class="nav" href="/photography/">Photography</a>
+  <button class="theme" id="theme" aria-label="Switch to dark mode">
+    <svg class="moon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>
+    <svg class="sun" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+  </button>
+  </div>
+</header>
+
+<main class="note">
+  <h1 style="--i:0">Welcome.</h1>
+  <p style="--i:1">Here you'll find a few things I've chosen to share with the world.</p>
+  <p style="--i:2">Photography has become a growing part of my life. It keeps me curious and present, and helps me notice what I'd otherwise miss. You can find some of my work <a href="/photography/">here</a>.</p>
+  <p style="--i:3">I also love to code, and sometimes I'll share what I've made or learned.</p>
+  <div class="sign" style="--i:4">
+    <p>Thanks for stopping by,</p>
+    <p class="name">Terrell V.</p>
+    <p class="date">October 2026</p>
+  </div>
+  <a class="cta" href="/photography/" style="--i:5">View photography <svg aria-hidden="true" width="40" height="14" viewBox="0 0 40 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path class="shaft" d="M1 7H33"/><path d="M30 1.8L38 7L30 12.2L32.2 7Z" fill="currentColor" stroke-width="1.2"/></svg></a>
+</main>
+
+<script>
+// Light/dark toggle; the theme itself is applied by the script in <head>.
+// Safari on iPhone and iPad only re-reads its own bar colours on load, so there the toggle reloads (the pick is stored first).
+const toggle = document.getElementById('theme');
+const syncTheme = t => toggle.setAttribute('aria-label', `Switch to ${t === 'dark' ? 'light' : 'dark'} mode`);
+window.onTheme = syncTheme; syncTheme(document.documentElement.dataset.theme);
+const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+toggle.onclick = () => { setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); if (iOS) location.reload(); };
+
+// The arrow under the note. Pointing at it (or pressing it, or tabbing to it) draws it back, and its shaft winds into a
+// coiled spring. A click fires it: it winds its way up the page on a curve and pokes the Photography link in the header from
+// below. The shaft crumples back into a coil, the link jumps, and the whole page slides up to show the photography.
+// The slide is a cross-page view transition (the photography page plays it). Browsers without those slide this page up
+// first, then open the photography. A small spring model runs on requestAnimationFrame, only while the arrow moves.
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cta = document.querySelector('.cta'), link = document.querySelector('.top .nav');
+  const arrow = cta.querySelector('svg'), shaft = arrow.querySelector('.shaft');
+  // TIP: the arrow's point, in px from its top left. COIL: how far back it draws (px). STEP: the model's time step (ms).
+  // RAMP: how long the released arrow takes to reach full speed (ms). DIP: how much it slows at the top of its arc (0 to 1).
+  // LIFT: how much bigger it gets at the top of its arc, as if it rises toward the viewer. FLY: the shaft's length in flight.
+  const TIP = { x: 38.6, y: 7 }, COIL = -6, STEP = 2, RAMP = 70, DIP = .6, LIFT = .3, FLY = .55;
+  const spring = (period, ratio) => { const w = 2 * Math.PI / period; return { k: w * w, c: 2 * ratio * w }; };
+  // Loose springs move it between rest and drawn back. The stuck spring is stiff and lightly damped, so the shaft rings.
+  const LOOSE = { x: spring(220, .55), s: spring(120, .4) }, STUCK = { s: spring(110, .12) };
+  // x, y: where the point is, from its place at rest (px); a: heading (deg, 0 is right); z: size (1 is natural);
+  // s: shaft length (1 is the length at rest); n: the length the shaft springs back to (FLY once it is fired).
+  // vx and vs are velocities, per ms.
+  const st = { x: 0, y: 0, a: 0, z: 1, vx: 0, s: 1, vs: 0, n: 1 };
+  // flown: time in the air (ms); gone: distance along the flight (px); speed: top speed (px per ms)
+  let mode = 'rest', route = null, flown = 0, gone = 0, speed = 0, raf = 0, last = 0, timer = 0, slide = null;
+
+  // The shaft runs from its tail into the solid head, whose point is at (38, 7). Pressed shorter, it folds into a zigzag spring like a row of
+  // mountains: it starts low at the tail, rises and falls three times, then climbs into a straight neck behind the head.
+  // The more it is pressed below the length it springs back to (n), the taller the peaks; at that length or longer it is a
+  // straight line. Drawn back, the head moves back and the tail stays put, so the spring keeps room to read clearly.
+  function shaftPath(s, n) {
+    const NECK = 27, POINTS = 7, tail = 38 - 37 * s, press = Math.min(1, Math.max(0, (n - s) / (-COIL / 37)));
+    const h = 8 * press, span = (NECK - tail) / POINTS;
+    if (h < .1 || span <= 0) return `M${tail.toFixed(2)} 7H33`;
+    let d = '';
+    for (let k = 0; k < POINTS; k++) d += `${k ? 'L' : 'M'}${(tail + span * k).toFixed(2)} ${(7 + (k % 2 ? -h : h) / 2).toFixed(2)}`;
+    return `${d}L${NECK} 7H33`;
+  }
+  // The box of a link's text, without its padding
+  function textBox(el) {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    return r.getBoundingClientRect();
+  }
+  // The flight, from the point where it is now to just under the link's text. It sets off to the right in a wide arc, wanders
+  // off it a little and back, and comes up to the link from straight below. Sampled into points, with the distance to each.
+  function plot() {
+    const a = arrow.getBoundingClientRect(), t = textBox(link);
+    const home = { x: a.left - st.x + TIP.x, y: a.top + TIP.y }, p0 = { x: home.x + st.x, y: home.y }, p3 = { x: (t.left + t.right) / 2, y: t.bottom + 2 };
+    const p1 = { x: Math.min(innerWidth - 24, p0.x + Math.max(200, Math.abs(p3.x - p0.x) * .9 + 100)), y: p0.y }, p2 = { x: p3.x, y: p3.y + (p0.y - p3.y) * .65 };
+    const pts = [], run = [0];
+    for (let k = 0; k <= 160; k++) {
+      const u = k / 160, w = 1 - u, b = (q0, q1, q2, q3) => w * w * w * q0 + 3 * w * w * u * q1 + 3 * w * u * u * q2 + u * u * u * q3;
+      const db = (q0, q1, q2, q3) => 3 * w * w * (q1 - q0) + 6 * w * u * (q2 - q1) + 3 * u * u * (q3 - q2);
+      const tx = db(p0.x, p1.x, p2.x, p3.x), ty = db(p0.y, p1.y, p2.y, p3.y), tl = Math.hypot(tx, ty) || 1;
+      const off = 14 * Math.sin(3 * Math.PI * u) * Math.sin(Math.PI * u);
+      pts.push({ x: b(p0.x, p1.x, p2.x, p3.x) - ty / tl * off, y: b(p0.y, p1.y, p2.y, p3.y) + tx / tl * off });
+      if (k) run.push(run[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
+    }
+    return { home, pts, run, total: run[run.length - 1] };
+  }
+  // The place and heading at distance d along the flight
+  function along(d) {
+    const { pts, run } = route;
+    let k = 1;
+    while (k < pts.length - 1 && run[k] < d) k++;
+    const p = pts[k - 1], q = pts[k], f = Math.min(1, (d - run[k - 1]) / (run[k] - run[k - 1] || 1));
+    return { x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f, a: Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI };
+  }
+
+  function pull(key, target, sp, dt) {
+    const v = 'v' + key;
+    st[v] += (sp.k * (target - st[key]) - sp.c * st[v]) * dt;
+    st[key] += st[v] * dt;
+  }
+  function step(dt) {
+    if (mode === 'fly') {
+      // Like a thrown ball: released fast, slow and large at the top of its arc, fast again as it comes down onto the link.
+      // The shaft springs out straight and short, so the arrow flies compact.
+      const arc = Math.sin(Math.PI * gone / route.total);
+      flown += dt;
+      gone = Math.min(route.total, gone + speed * Math.min(1, flown / RAMP) * (1 - DIP * arc) * dt);
+      const p = along(gone);
+      Object.assign(st, { x: p.x - route.home.x, y: p.y - route.home.y, a: p.a, z: 1 + LIFT * arc, n: FLY });
+      pull('s', FLY, LOOSE.s, dt);
+      if (gone >= route.total) hit();
+      return;
+    }
+    const coiled = mode === 'coil';
+    if (mode !== 'stuck') pull('x', coiled ? COIL : 0, LOOSE.x, dt);
+    pull('s', coiled ? (37 + COIL) / 37 : st.n, mode === 'stuck' ? STUCK.s : LOOSE.s, dt);
+  }
+  // The point stops under the link. The tail keeps going, which crumples the shaft back into a coil; the stiff spring then
+  // rings it straight. The link jumps up from the blow, and the page leaves.
+  function hit() {
+    Object.assign(st, { s: FLY, vs: -.012 });
+    mode = 'stuck';
+    poke();
+    timer = setTimeout(leave, 170);
+  }
+  // The link jumps up and settles like a struck spring
+  function poke() {
+    const frames = [];
+    for (let k = 0; k <= 24; k++) {
+      const t = 600 * k / 24, y = -7 * Math.exp(-t / 120) * Math.sin(2 * Math.PI * t / 190);
+      frames.push({ transform: `translateY(${y.toFixed(2)}px)` });
+    }
+    link.style.color = 'var(--ink)';
+    link.animate(frames, { duration: 600 });
+  }
+  // Slide the page up to show the photography. Where the browser has cross-page view transitions, the photography page plays
+  // the slide (the note in sessionStorage asks it to). Elsewhere this page slides up on its own, then the photography opens.
+  function leave() {
+    if ('CSSViewTransitionRule' in window) {
+      try { sessionStorage.setItem('arrive', 'rise'); } catch (e) {}
+      return location.assign(cta.href);
+    }
+    slide = document.body.animate([{ transform: 'none' }, { transform: 'translateY(-100vh)' }], { duration: 560, easing: 'cubic-bezier(.3,.75,.2,1)', fill: 'forwards' });
+    slide.onfinish = () => location.assign(cta.href);
+  }
+  function render(now) {
+    // A held coil trembles a little, as if straining to go
+    const strain = mode === 'coil' ? .01 * Math.sin(now / 40) * Math.min(1, st.x / COIL) : 0;
+    arrow.style.transform = `translate(${st.x}px,${st.y}px) rotate(${st.a}deg) scale(${st.z})`;
+    shaft.setAttribute('d', shaftPath(st.s + strain, st.n));
+  }
+  function rest() {
+    Object.assign(st, { x: 0, y: 0, a: 0, z: 1, vx: 0, s: 1, vs: 0, n: 1 });
+    arrow.style.transform = '';
+    shaft.setAttribute('d', shaftPath(1, 1));
+  }
+  const still = () => mode === 'rest' && Math.abs(st.x) + Math.abs(st.vx) * 50 + Math.abs(st.s - 1) * 20 < .02;
+  function tick(now) {
+    const dt = Math.min(40, now - last); last = now;
+    for (let t = 0; t < dt; t += STEP) step(Math.min(STEP, dt - t));
+    if (still()) { rest(); raf = 0; return; }
+    render(now);
+    raf = requestAnimationFrame(tick);
+  }
+  function set(m) {
+    if (mode === 'fly' || mode === 'stuck') return;
+    mode = m;
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+  }
+  // Fire. A tap or a key press has not drawn the arrow back yet, so it draws back briefly first.
+  // The flight takes longer the further it goes, but never more than 1.5 s.
+  function launch() {
+    const windUp = st.x > COIL * .6 ? 120 : 0;
+    set('coil');
+    timer = setTimeout(() => {
+      route = plot(); flown = 0; gone = 0;
+      speed = route.total * slowness() / (Math.min(1500, 700 + .5 * route.total) - RAMP / 2);
+      set('fly');
+    }, windUp);
+  }
+  // How much longer the flight takes for slowing at the top of its arc than at a steady top speed
+  function slowness() {
+    let sum = 0;
+    for (let k = 0; k < 100; k++) sum += 1 / (1 - DIP * Math.sin(Math.PI * (k + .5) / 100));
+    return sum / 100;
+  }
+  // Fetch the photography page early, while the arrow is drawn back, so the slide starts as soon as the link is poked
+  function prefetch() {
+    if (document.querySelector('link[rel=prefetch]')) return;
+    const l = document.createElement('link');
+    l.rel = 'prefetch'; l.href = cta.href;
+    document.head.append(l);
+  }
+  cta.addEventListener('pointerenter', prefetch);
+  cta.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') set('coil'); });
+  cta.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') set('rest'); });
+  cta.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') set('coil'); });
+  cta.addEventListener('pointercancel', () => set('rest'));
+  cta.addEventListener('focus', () => { if (cta.matches(':focus-visible')) set('coil'); });
+  cta.addEventListener('blur', () => set('rest'));
+  cta.addEventListener('click', e => {
+    // A new tab or window (modifier keys, middle button) opens straight away
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    if (mode !== 'fly' && mode !== 'stuck') launch();
+  });
+  // Coming back with the Back button can show the page as it was left, with the arrow under the link: put everything back
+  addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    clearTimeout(timer); cancelAnimationFrame(raf); raf = 0; mode = 'rest';
+    if (slide) { slide.cancel(); slide = null; }
+    link.style.color = '';
+    try { sessionStorage.removeItem('arrive'); } catch (err) {}
+    rest();
+  });
+})();
+</script>
+</body>
 </html>

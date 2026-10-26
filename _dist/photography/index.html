@@ -3,9 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}.draft{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:50;pointer-events:none;font:500 9px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2);background:var(--draft-bg);border:1px solid var(--line);border-radius:999px;padding:6px 7px 6px 9px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}
+/* Arriving from the arrow on the home page: the home page slides up and away, and this page slides up in under it.
+   A cross-page view transition; browsers without them just open the page. */
+@media (prefers-reduced-motion:no-preference){
+  @view-transition{navigation:auto}
+  html.arrive::view-transition-old(root){animation:vt-out .75s cubic-bezier(.3,.75,.2,1) both}
+  html.arrive::view-transition-new(root){animation:vt-in .75s cubic-bezier(.3,.75,.2,1) both}
+  @keyframes vt-out{to{transform:translateY(-100%)}}
+  @keyframes vt-in{from{transform:translateY(100%)}}
+}
 </style>
+<script>
+// The slide plays only when the home page's arrow sent the visitor here (it leaves a note in sessionStorage); any other page change is instant
+addEventListener('pagereveal', e => {
+  if (!e.viewTransition) return;
+  let sent = false; try { sent = sessionStorage.getItem('arrive') === 'rise'; sessionStorage.removeItem('arrive'); } catch (err) {}
+  if (!sent) return e.viewTransition.skipTransition();
+  document.documentElement.classList.add('arrive');
+  e.viewTransition.finished.finally(() => document.documentElement.classList.remove('arrive'));
+});
+addEventListener('pageswap', e => e.viewTransition && e.viewTransition.skipTransition());
+</script>
 <title>Terrell V. Photography</title>
+<!-- Tab icon: the TV mark, black when the device is in light mode and white in dark mode; the PNG is for browsers without SVG icons -->
+<link rel="icon" type="image/png" href="/assets/images/site-wide/favicon-logo.png">
+<link rel="icon" type="image/svg+xml" href="/assets/images/site-wide/tv-icon-black.svg" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/svg+xml" href="/assets/images/site-wide/tv-icon-white.svg" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#ffffff" id="themeColor">
 <meta name="color-scheme" content="light dark" id="colorScheme">
 <script>
@@ -39,7 +63,7 @@
   --bg:#ffffff; --ink:#151617; --ink-2:#6a6e73; --ink-3:#a3a7ac; --line:#15161714; --soft:#f3f4f5; --rail:#15161747; --pc-bg:#15161717;
   --serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
- --hot:#e6e7e9; --draft-bg:#ffffffd9;
+ --hot:#e6e7e9;
   --head-h:60px; --side:40px; --maxw:1320px;
   color-scheme:light;
 }
@@ -47,7 +71,7 @@
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#111213; --ink:#ececed; --ink-2:#a3a7ac; --ink-3:#6f7378; --line:#ececed1a; --soft:#1c1d1f; --rail:#ececed47; --pc-bg:#ececed1c;
- --hot:#2a2b2e; --draft-bg:#111213d9;
+ --hot:#2a2b2e;
   color-scheme:dark;
 }
 /* Light/dark toggle: shows the moon in light mode and the sun in dark mode */
@@ -60,6 +84,8 @@
 .theme .sun,[data-theme="dark"] .theme .moon{display:none}
 [data-theme="dark"] .theme .sun{display:block}
 @media (max-width:760px){:root{--side:20px}}
+/* With a mouse, the side margin clears the arrow buttons (44px, 12px from the edge); the header and the title spread both use it */
+@media (pointer:fine) and (min-width:761px){:root{--side:64px}}
 @media (max-width:760px) and (min-height:501px){:root{--head-h:56px}}
 @media (max-height:500px){:root{--head-h:52px;--side:20px;--fbot:40px}}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
@@ -107,9 +133,9 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 @media (prefers-reduced-motion:reduce){.menu,.menu-in,.pick svg{transition:none}}
 /* Phones held upright: one quiet row. Logo left, tabs in the middle, the two toggles right.
    The side margins line up with the iPhone status bar: the logo under the clock, the last icon under the battery.
-   No count or draft badge up top; the photo number moves beside the dots. The tabs give way to the Collections button. */
+   No count up top; the photo number moves beside the dots. The tabs give way to the Collections button. */
 @media (max-width:760px) and (min-height:501px){
-  .count,.draft{display:none}
+  .count{display:none}
   .top{grid-template-columns:auto minmax(0,1fr) auto;column-gap:14px;padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
   .tabs{display:none}
   .pick{display:inline-flex;justify-self:center}
@@ -174,7 +200,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 .pages.dragging{cursor:grabbing;scroll-snap-type:none}.pages.dragging *{pointer-events:none}
 .pages.locked{overflow:hidden}
 @media (pointer:coarse){.pages{cursor:auto}}
-.pg{flex:0 0 100%;min-width:0;max-width:100%;overflow:hidden;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:4vh max(20px,env(safe-area-inset-left,0px),6.5vw) 3vh max(20px,env(safe-area-inset-right,0px),6.5vw);gap:max(16px,3vw)}
+.pg{flex:0 0 100%;min-width:0;max-width:100%;overflow:hidden;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:4vh max(20px,env(safe-area-inset-right,0px),6.5vw,calc((100% - var(--maxw)) / 2)) 3vh max(20px,env(safe-area-inset-left,0px),6.5vw,calc((100% - var(--maxw)) / 2));gap:max(16px,3vw)}
 .fr{margin:0;display:flex;flex-direction:column;flex:none;container-type:inline-size}
 .ph{position:relative;overflow:hidden;touch-action:pan-x;background:var(--soft) center/cover}
 .ph.zoomed{touch-action:none;overflow:visible;z-index:2;cursor:move}
@@ -196,17 +222,38 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 .opener p{margin:min(18px,2.5vh) 0 0;color:var(--ink-2);font:400 12px/1.7 var(--mono)}
 .opener .go{margin-top:min(32px,4.5vh);display:flex;align-items:center;gap:14px;color:var(--ink);font-size:13px}
 .opener .go svg{animation:nudge 1.8s ease-in-out infinite}
-/* Large screens: the title page is a book spread. Two equal halves, the title centred on the left page and the first photo centred on the right. */
-.opener.lead{flex-direction:row;align-items:stretch;justify-content:flex-start;gap:0;padding-left:0;padding-right:0}
+/* Large screens: the title page is a book spread of two equal halves inside the header's content column (--maxw).
+   It shares the header's three lines: the title block starts under the mark, the spine sits under the centred tabs,
+   and the first photo ends under the toggle. Its side padding matches the header's exactly. */
+.opener.lead{flex-direction:row;align-items:stretch;justify-content:flex-start;gap:0;padding-left:max(var(--side),env(safe-area-inset-left,0px),calc((100% - var(--maxw)) / 2));padding-right:max(var(--side),env(safe-area-inset-right,0px),calc((100% - var(--maxw)) / 2))}
 .lead .op-tx,.lead .op-ph{flex:0 0 50%;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 clamp(32px,5vw,100px)}
-.lead .op-tx{text-align:center}
+.lead .op-tx{text-align:left;align-items:flex-start;padding-left:0}
+.lead .op-ph{padding-right:0}
+/* Landscape ('row'): the photo sits just right of the spine, and fit() starts the title block at the mirror image of the photo's
+   outer edge. A photo that fills its page lands on the toggle line, which puts the title under the mark; a narrower one pulls both in. */
+.lead .op-ph.stack-row{justify-content:flex-start}
+.lead .op-ph.stack-col{align-items:flex-start}
+/* Portrait ('col'): the title on top, the first photo filling the space under it, both on the mark's line */
+.opener.lead.col{flex-direction:column;justify-content:center;padding-top:clamp(16px,4vh,48px);padding-bottom:clamp(8px,2vh,24px)}
+.lead.col .op-tx{flex:none;padding:0 0 clamp(24px,4vh,44px)}
+.lead.col .op-ph{flex:1 1 0;min-height:0;padding:0;justify-content:flex-start;align-items:flex-start}
+.lead.col .op-tx h2{font-size:min(clamp(52px,9vw,110px),10vh)}
 /* A curated page puts its photos side by side (row) or stacks them (col) */
 .pg.stack-col,.op-ph.stack-col{flex-direction:column}
 .pg.stack-row,.op-ph.stack-row{flex-direction:row}
 .lead .op-ph{gap:max(16px,3vw)}
-/* "Collection" label over the title; centred on the spread, with a rule either side to balance it */
+/* "Collection" label over the title, led by a short rule */
 .op-k{margin-bottom:min(22px,3vh)}
-.lead .op-k::after{content:"";width:28px;height:1px;background:currentColor}
+/* A title page without a photo (short windows): centred in the window, the label balanced with a rule either side.
+   Narrow windows keep the title on the mark's line. */
+@media (min-width:761px){
+  .opener:not(.lead){align-items:center;text-align:center}
+  .opener:not(.lead) .op-tx{display:flex;flex-direction:column;align-items:center}
+  .opener:not(.lead) .op-k::after{content:"";width:28px;height:1px;background:currentColor}
+  /* The words are what's centred; the arrow hangs just past them */
+  .opener:not(.lead) .go{position:relative}
+  .opener:not(.lead) .go svg{position:absolute;left:100%;top:50%;margin:-6px 0 0 14px}
+}
 .lead .op-tx h2{font-size:min(clamp(48px,5.4vw,104px),16vh);overflow-wrap:break-word}
 @keyframes nudge{50%{transform:translateX(8px)}}
 .ghint svg{animation-name:nudge-s}@keyframes nudge-s{50%{transform:translateX(6px)}}
@@ -218,17 +265,31 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 .pcx{position:relative;display:flex;align-items:center;height:28px;padding:0 6px;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
 .pcx::before{content:"";position:absolute;inset:0;border-radius:14px;background:var(--pc-bg);opacity:0;transition:opacity .25s}
 .pcx.on::before{opacity:1}
-.pcx-win{position:relative;overflow:hidden;width:calc(var(--shown,1) * 16px)}
-.pcx-strip{display:flex;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+/* The window clips the strip at its sides only, so the hopping dot can rise above it */
+.pcx-win{position:relative;width:calc(var(--shown,1) * 16px);-webkit-clip-path:inset(-28px 0);clip-path:inset(-28px 0)}
+/* The strip's slide and the edge dots' resizing share one timing (--pc-slide), so they move together */
+.pcx{--pc-slide:.5s cubic-bezier(.2,.8,.2,1)}
+.pcx-strip{position:relative;display:flex;transition:transform var(--pc-slide)}
 .pcx-dot{flex:none;width:16px;height:28px;display:grid;place-items:center}
-.pcx-dot i{width:7px;height:7px;border-radius:50%;background:var(--rail);transition:background-color .2s,transform .3s cubic-bezier(.2,.8,.2,1)}
+.pcx-dot i{width:7px;height:7px;border-radius:50%;background:var(--rail);transition:background-color .2s,transform var(--pc-slide)}
 .pcx-dot[aria-current="true"] i{background:var(--ink)}
 .pcx.still::before,.pcx.still .pcx-strip,.pcx.still .pcx-dot i{transition:none}
+/* The current page is a separate solid dot (pcx-hop) that jumps from dot to dot; the dots under it all stay faint.
+   pcx-ring is the ripple it leaves where it lands. Both are moved only with transforms by the hop animation in pageControl(). */
+.pcx-hop,.pcx-ring{position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;pointer-events:none;display:none}
+.pcx-hop{background:var(--ink);will-change:transform}
+.pcx-ring{box-sizing:border-box;border:1px solid var(--ink);opacity:0}
+.pcx.hop .pcx-hop,.pcx.hop .pcx-ring{display:block}
+.pcx.hop .pcx-dot[aria-current="true"] i{background:var(--rail)}
 @media (prefers-reduced-motion:reduce){.pcx-strip,.pcx-dot i{transition:none}}
 @media (max-width:760px) and (min-height:501px){
   .pg{padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
   .fr figcaption{display:none}
 }
+/* With a mouse the arrow buttons show (44px, 12px from each edge), so pages keep at least 68px each side to stay clear of them */
+@media (pointer:fine){.pg{padding-left:max(68px,6.5vw,calc((100% - var(--maxw)) / 2));padding-right:max(68px,6.5vw,calc((100% - var(--maxw)) / 2))}}
+/* A narrow window with a mouse: the header moves in with the pages, so the mark stays over the title */
+@media (pointer:fine) and (max-width:760px) and (min-height:501px){.top{padding-left:68px;padding-right:68px}}
 .arrow{position:absolute;top:50%;z-index:3;transform:translateY(-50%);appearance:none;border:0;width:44px;height:44px;border-radius:50%;background:var(--soft);display:grid;place-items:center;cursor:pointer;transition:opacity .2s}
 .arrow:disabled{opacity:0;pointer-events:none}
 .arrow{transition:opacity .2s,background-color .2s,transform .2s}.arrow.hot{background:var(--hot)}
@@ -248,9 +309,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outli
 @media (prefers-reduced-motion:reduce){.opener .go svg{animation:none}}
 </style>
 
-<div class="draft" aria-hidden="true">Draft</div>
 <header class="top">
-  <button class="imp" id="imp" aria-label="Terrell Vest Photography, home"><img class="logo logo-l" src="tv-mark-black.svg" alt="" height="21"><img class="logo logo-d" src="tv-mark-white.svg" alt="" height="21"></button>
+  <a class="imp" href="/" aria-label="Terrell V., home"><img class="logo logo-l" src="tv-mark-black.svg" alt="" height="21"><img class="logo logo-d" src="tv-mark-white.svg" alt="" height="21"></a>
   <nav class="tabs mono" id="tabs" role="tablist" aria-label="Collections"><i id="tabI"></i></nav>
   <button class="pick mono" id="pick" aria-haspopup="true" aria-expanded="false" aria-controls="menu"><span id="pickT">Collections</span><svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"/></svg></button>
   <div class="hr">
@@ -359,7 +419,6 @@ function setMenu(open) {
 $('pick').onclick = () => { haptic(5); setMenu(!document.body.hasAttribute('data-menu')); };
 // A tap on the sheet outside the list closes it
 $('menu').onclick = e => { if (!e.target.closest('.mi')) setMenu(false); };
-$('imp').onclick = () => go(homeState());
 // Light/dark toggle; the theme itself is applied by the script in <head>
 const syncTheme = t => $('theme').setAttribute('aria-label', `Switch to ${t === 'dark' ? 'light' : 'dark'} mode`);
 window.onTheme = t => { syncTheme(t); state.v === 'spread' && fit(); }; syncTheme(document.documentElement.dataset.theme);
@@ -416,27 +475,42 @@ function pageControl(nav, { step, jump }) {
   const el = document.createElement('div'); el.className = 'pcx'; el.setAttribute('role', 'img');
   el.innerHTML = '<div class="pcx-win"><div class="pcx-strip"></div></div>';
   nav.replaceChildren(el);
-  const strip = el.querySelector('.pcx-strip');
+  const strip = el.querySelector('.pcx-strip'), hop = hopper(strip);
   let n = 0, cur = 0, off = 0, scrub = null, hideT = 0;
-  function set(count, i, fresh) {
-    if (count !== n) { strip.innerHTML = '<span class="pcx-dot"><i></i></span>'.repeat(count); n = count; fresh = true; }
+  const dots = () => strip.querySelectorAll('.pcx-dot');
+  const shownNow = () => Math.min(n, phone.matches ? 7 : 10);
+  // instant: show the change with no hop (scrubbing, where Apple advises against animating every step).
+  // landIn: when the content's own move is known ahead (a desktop page glide), the hop lands as it ends, in that many ms.
+  function set(count, i, fresh, instant, landIn) {
+    if (count !== n) { strip.innerHTML = '<span class="pcx-dot"><i></i></span>'.repeat(count); hop.mount(); n = count; fresh = true; }
+    const was = cur, shown = shownNow();
     cur = Math.max(0, Math.min(n - 1, i));
-    const shown = Math.min(n, phone.matches ? 7 : 10);
     // The window moves only when the current dot reaches its second-to-last slot, as on iOS; a fresh list centres it
     off = fresh ? cur - (shown >> 1) : Math.min(Math.max(off, cur - shown + 2), cur - 1);
     off = Math.max(0, Math.min(n - shown, off));
     el.classList.toggle('still', !!fresh);
     el.style.setProperty('--shown', shown);
+    dots().forEach((d, k) => d.setAttribute('aria-current', String(k === cur)));
+    el.setAttribute('aria-label', `Page ${cur + 1} of ${n}`);
+    nav.hidden = n < 2;
+    // Every screen size; reduced motion keeps plain dots that change in place.
+    // The dot always hops the way the page moved. If the window has to slide, it waits until the dot lands, then glides under it.
+    const hopOn = !reduce;
+    el.classList.toggle('hop', hopOn);
+    if (!hopOn) frame();
+    else if (fresh || instant) { hop.to(cur, 0); frame(); }
+    else if (cur !== was) hop.to(cur, cur - was, landIn, frame);
+    else if (!hop.busy()) frame();
+    if (fresh) { void el.offsetWidth; el.classList.remove('still'); if (!reduce) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' }); }
+  }
+  // Slide the strip to the current window and shrink the dots at a clipped edge with more pages beyond it, the outermost most
+  function frame() {
+    const shown = shownNow();
     strip.style.transform = `translateX(${-off * PC_SLOT}px)`;
-    [...strip.children].forEach((d, k) => {
-      d.setAttribute('aria-current', String(k === cur));
-      // Dots at an edge with more pages beyond it shrink: the outermost most
+    dots().forEach((d, k) => {
       const edge = Math.min(off > 0 ? k - off : 9, off + shown < n ? off + shown - 1 - k : 9);
       d.firstChild.style.transform = edge <= 0 ? 'scale(.5)' : edge === 1 ? 'scale(.75)' : '';
     });
-    el.setAttribute('aria-label', `Page ${cur + 1} of ${n}`);
-    nav.hidden = n < 2;
-    if (fresh) { void el.offsetWidth; el.classList.remove('still'); if (!reduce) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' }); }
   }
   const showBg = on => { clearTimeout(hideT); if (on) el.classList.add('on'); else hideT = setTimeout(() => el.classList.remove('on'), 500); };
   el.addEventListener('pointerdown', e => {
@@ -449,19 +523,111 @@ function pageControl(nav, { step, jump }) {
     if (!scrub.moved && Math.abs(dx) < 8) return;
     scrub.moved = true;
     const i = e.clientX < r.left ? 0 : e.clientX > r.right ? n - 1 : scrub.i + Math.round(dx / PC_SLOT);
-    if (Math.max(0, Math.min(n - 1, i)) !== cur) { set(n, i); jump(cur); }
+    if (Math.max(0, Math.min(n - 1, i)) !== cur) { set(n, i, false, true); jump(cur); }
   });
   el.addEventListener('pointerup', e => {
     if (!scrub) return; const s = scrub; scrub = null; showBg(false);
     if (s.moved) return;
     // The control holds pointer capture, so find the dot under the pointer rather than use e.target
     const dot = e.pointerType === 'mouse' && document.elementFromPoint(e.clientX, e.clientY)?.closest('.pcx-dot');
-    if (dot) { const k = [...strip.children].indexOf(dot); if (k !== cur) jump(k, true); return; }
-    const c = strip.children[cur].getBoundingClientRect();
+    if (dot) { const k = [...dots()].indexOf(dot); if (k !== cur) jump(k, true); return; }
+    const c = dots()[cur].getBoundingClientRect();
     haptic(5); step(e.clientX < c.left + c.width / 2 ? -1 : 1);
   });
   el.addEventListener('pointercancel', () => { scrub = null; showBg(false); });
-  return { set };
+  // land(): the content has come to rest, so a hop still in the air should touch down now
+  return { set, land: hop.land };
+}
+
+// The jumping current-page dot. It lives inside the strip, so when the strip slides it carries the dot with it.
+// to(k, steps, landIn, onLand) moves it onto dot k: steps 0 places it, any other value hops it (landIn: touch down in that many ms),
+// and onLand runs at touchdown. A hop is sampled from a small physics model into Web Animations keyframes (no library; every browser
+// since 2020 runs them): a crouch, a ballistic arc that stretches along its velocity, an impact squash, then a damped-spring settle.
+// Landing sends out a faint ring and makes the nearby dots dip. A new hop mid-air starts from wherever the dot is, without a crouch.
+// mount() puts the dot back after the strip's dots are rebuilt; busy() says a hop is still on its way down.
+function hopper(strip) {
+  const dot = document.createElement('i'), ring = document.createElement('i');
+  dot.className = 'pcx-hop'; ring.className = 'pcx-ring';
+  const mount = () => strip.append(ring, dot);
+  // runs[0] is the dot's own animation; impactAt is when it touches down, in its own time
+  let x = 0, runs = [], impactAt = 0, landK = 0, landT = 0, onLand = null;
+  const dotX = k => k * PC_SLOT + (PC_SLOT - 7) / 2;
+  const stop = () => { runs.forEach(a => a.cancel()); runs = []; clearTimeout(landT); landT = 0; };
+  const busy = () => !!landT;
+  // Touchdown in `delay` ms: the ring, the dips, then whatever waits for the landing (the strip's slide)
+  function touchdown(delay) {
+    ripple(delay);
+    clearTimeout(landT);
+    landT = setTimeout(() => { landT = 0; onLand && onLand(); }, delay);
+  }
+  // Touch: when the swipe has settled, bring a hop that's still in the air down within LAND_MS, then let the bounce play at normal speed
+  const LAND_MS = 60;
+  function land() {
+    const a = runs[0];
+    if (!a || a.playState !== 'running' || impactAt - a.currentTime <= LAND_MS) return;
+    a.updatePlaybackRate((impactAt - a.currentTime) / LAND_MS);
+    setTimeout(() => a.updatePlaybackRate(1), LAND_MS);
+    runs.slice(1).forEach(r => r.cancel()); runs = [a];
+    touchdown(LAND_MS);
+  }
+  // The landing ring, and the nearby dots dipping as the ground shakes: less and later the further away they are
+  function ripple(delay) {
+    runs.push(ring.animate([{ opacity: .32, transform: `translate(${x}px,0) scale(1)` }, { opacity: 0, transform: `translate(${x}px,0) scale(3)` }],
+      { duration: 560, delay, easing: 'cubic-bezier(.2,.8,.2,1)' }));
+    strip.querySelectorAll('.pcx-dot').forEach((d, k) => {
+      const dd = Math.abs(k - landK); if (!dd || dd > 3) return;
+      runs.push(d.animate([{ transform: 'none' }, { transform: `translateY(${1.8 / dd}px)` }, { transform: 'none' }],
+        { duration: 260, delay: delay + (dd - 1) * 40, easing: 'cubic-bezier(.3,.6,.3,1)' }));
+    });
+  }
+  function to(k, steps, landIn, after) {
+    const x1 = dotX(k);
+    if (!steps) { stop(); dot.style.transform = `translate(${x1}px,0)`; x = x1; return; }
+    // Start from where the dot is, which is mid-air if a hop is still running
+    const now = getComputedStyle(dot).transform, m = new DOMMatrixReadOnly(now === 'none' ? undefined : now);
+    const from = runs.length ? { x: m.m41, y: m.m42, air: m.m42 < -.5 } : { x, y: 0, air: false };
+    stop(); x = x1; landK = k; onLand = after; dot.style.transform = `translate(${x1}px,0)`;
+    // Touch screens get a quicker hop, since a native swipe settles soon after the page changes
+    const { frames, T, impact } = hopFrames(from, x1, coarse, landIn);
+    runs.push(dot.animate(frames, { duration: T, easing: 'linear' }));
+    impactAt = impact;
+    touchdown(impact);
+  }
+  return { to, land, mount, busy };
+}
+// Keyframes for one hop from `from` ({ x, y, air }) to x1 on the ground. quick shortens the crouch and flight; landIn instead sets
+// when it touches down (ms), with the crouch taking under a fifth of that. Returns the frames, the total time and when it lands (ms).
+// The dot is a 3.5px-radius ellipse: scale(s, 1/s) after rotate(a) stretches it along angle a while keeping its area.
+// On the ground its centre sits so the bottom of the ellipse stays on the line.
+function hopFrames(from, x1, quick, landIn) {
+  const R = 3.5, dx = x1 - from.x, slots = Math.abs(dx) / PC_SLOT, h = 9 + 5 * Math.sqrt(Math.max(0, slots - 1)), settle = 460;
+  let crouch = from.air ? 0 : quick ? 45 : 90;
+  let fly = (quick ? 190 + 60 * Math.sqrt(Math.max(1, slots)) : 250 + 80 * Math.sqrt(Math.max(1, slots))) - (from.air ? 60 : 0);
+  if (landIn) { const total = Math.max(200, landIn); crouch = from.air ? 0 : Math.min(90, total * .18); fly = total - crouch; }
+  const T = crouch + fly + settle, frames = [];
+  const lift = (a, s) => R - Math.hypot(R * s * Math.sin(a), R / s * Math.cos(a));
+  const add = (t, px, py, a, s) => frames.push({ offset: Math.min(1, t / T), transform: `translate(${px}px,${py}px) rotate(${a}rad) scale(${s},${1 / s})` });
+  // Flight: steady sideways speed under gravity. y is up-negative; height h above the straight line from start to landing.
+  const yAt = u => from.y * (1 - u) - 4 * h * u * (1 - u);
+  const angleAt = u => Math.atan2((-from.y - 4 * h * (1 - 2 * u)) / fly, dx / fly);
+  const stretchAt = u => 1 + Math.min(.34, 2.2 * Math.hypot(dx / fly, (-from.y - 4 * h * (1 - 2 * u)) / fly));
+  // Contact squashes (crouch and impact) press mostly straight down, leaning only a little toward the travel direction,
+  // so the dot flattens on the ground instead of tipping over
+  const a0 = angleAt(0), a1 = angleAt(1), ac = -Math.PI / 2 * .65 + a0 * .35, al = Math.PI / 2 * .65 + a1 * .35;
+  if (crouch) {
+    // Load the spring: compress, sinking onto the ground, then release into the stretch
+    for (let k = 0; k <= 6; k++) { const q = k / 6, s = 1 - .26 * Math.sin(q * Math.PI / 2); add(crouch * q, from.x, lift(ac, s), ac, s); }
+  }
+  for (let k = 0; k <= 14; k++) { const u = k / 14; add(crouch + fly * u, from.x + dx * u, yAt(u), angleAt(u), stretchAt(u)); }
+  // Impact: flatten against the ground along the incoming direction, then a damped spring settles it, with a small skid forward
+  const t0 = crouch + fly, hit = 50, dir = Math.sign(dx);
+  add(t0 + hit, x1 + dir * .8, lift(al, .64), al, .64);
+  for (let k = 1; k <= 16; k++) {
+    const t = (settle - hit) * k / 16, decay = Math.exp(-t / 120), s = 1 - .36 * decay * Math.cos(t / 34);
+    add(t0 + hit + t, x1 + dir * .8 * decay * Math.cos(t / 60), lift(al, s), al, s);
+  }
+  frames[frames.length - 1] = { offset: 1, transform: `translate(${x1}px,0px) rotate(${al}rad) scale(1,1)` };
+  return { frames, T, impact: t0 };
 }
 
 /* ---------- All: the wall ---------- */
@@ -663,15 +829,17 @@ function autoPages(items, lead) {
   return out;
 }
 // Large screens (not phones or short landscape) put the first photo on the title page, so it's on screen the moment a collection opens
-const leadOK = () => !phone.matches && innerWidth >= 900 && innerHeight > 500;
-let lead = false;
+// Larger screens (not phones or short landscape) put the first photo on the title page, so it's on screen the moment a collection opens:
+// beside the title in landscape windows ('row'), under it in portrait ones ('col'). '' means a title page of its own.
+const leadMode = () => phone.matches || innerHeight <= 500 ? '' : innerWidth >= 900 && innerWidth >= innerHeight * 1.05 ? 'row' : 'col';
+let lead = false, leadAs = '';
 function render() {
-  const items = cur.items; lead = leadOK() && items.length > 0; pages = compose(cur, lead); zooms = [];
+  const items = cur.items; leadAs = items.length ? leadMode() : ''; lead = !!leadAs; pages = compose(cur, lead); zooms = [];
   let shown = 0;
   const intro = `<div class="op-tx">${cur === ALL ? '' : '<div class="eyebrow mono op-k">Collection</div>'}<h2>${cur.title}</h2><p>${items.length} photographs${cur.blurb ? `<br>${cur.blurb}` : ''}</p><span class="go mono">Drag, swipe or click${lead ? ' for more' : ''} <svg width="28" height="12" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 5h19M16 1l4 4-4 4"/></svg></span></div>`;
   pagesEl.innerHTML = lead ? '' : `<section class="pg opener">${intro}</section>`;
   pages.forEach((group, gi) => {
-    const s = document.createElement('section'); s.className = lead && !gi ? 'pg opener lead' : 'pg';
+    const s = document.createElement('section'); s.className = lead && !gi ? `pg opener lead ${leadAs}` : 'pg';
     if (lead && !gi) s.innerHTML = intro + '<div class="op-ph"></div>';
     const into = s.querySelector('.op-ph') || s;
     into.dataset.dir = group.dir || ''; into.dataset.scale = group.scale || 1;
@@ -700,7 +868,8 @@ function fit() {
     // On the spread title page the photos have only their own half (the right page) to fill
     const box = frs[0].parentElement, bs = getComputedStyle(box), ss = getComputedStyle(s), n = frs.length, c = capH();
     const W = box.clientWidth - parseFloat(bs.paddingLeft) - parseFloat(bs.paddingRight);
-    const H = pagesEl.clientHeight - parseFloat(ss.paddingTop) - parseFloat(ss.paddingBottom);
+    // A stacked (portrait) title page leaves the photos only the space under the title
+    const H = s.classList.contains('col') ? box.clientHeight : pagesEl.clientHeight - parseFloat(ss.paddingTop) - parseFloat(ss.paddingBottom);
     const r = frs.map(f => { const p = cur.items[+f.dataset.k]; return p.w / p.h; });
     const sumR = r.reduce((a, x) => a + x, 0), sumInv = r.reduce((a, x) => a + 1 / x, 0);
     const rowH = Math.min(H - c, (W - (parseFloat(bs.columnGap) || 0) * (n - 1)) / sumR);
@@ -708,11 +877,26 @@ function fit() {
     const dir = box.dataset.dir || (n > 1 && colW * colW * sumInv > rowH * rowH * sumR ? 'col' : 'row');
     box.classList.toggle('stack-col', dir === 'col'); box.classList.toggle('stack-row', dir === 'row');
     const k = Math.min(1, Math.max(.1, +box.dataset.scale || 1));
-    frs.forEach((f, j) => {
+    const widths = frs.map((f, j) => {
       const h = (dir === 'col' ? colW / r[j] : rowH) * k, ph = f.querySelector('.ph');
       ph.style.height = h + 'px'; ph.style.width = (h * r[j]) + 'px'; f.style.width = ph.style.width;
+      return h * r[j];
     });
+    if (s.classList.contains('row')) {
+      const span = dir === 'col' ? Math.max(...widths) : widths.reduce((a, w) => a + w, 0) + (parseFloat(bs.columnGap) || 0) * (n - 1);
+      mirrorTitle(s, box, span);
+    }
   });
+}
+// Landscape title page: start the title block at the mirror image (across the spine) of the photos' outer edge.
+// The photos start one gutter right of the spine, so the title starts one gutter plus the photos' width left of it,
+// but never left of the mark's line, and always with room for its widest line (at least TITLE_MIN px).
+const TITLE_MIN = 300;
+function mirrorTitle(s, box, span) {
+  const tx = s.querySelector('.op-tx'), half = box.clientWidth, reach = parseFloat(getComputedStyle(box).paddingLeft) + span;
+  tx.style.paddingLeft = '0px';
+  const need = Math.max(TITLE_MIN, ...[...tx.children].map(c => { const r = document.createRange(); r.selectNodeContents(c); return r.getBoundingClientRect().width; }));
+  tx.style.paddingLeft = Math.max(0, Math.min(half - reach, half - parseFloat(getComputedStyle(tx).paddingRight) - need)) + 'px';
 }
 const idx = () => Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
 // A collection's page control: a tap steps a page (or on to the neighbouring collection at an end); scrubbing jumps straight to a page
@@ -734,7 +918,8 @@ function syncFocus() {
   // Count photographs, not pages: the opener has none and a wide-screen page can hold two or more
   const ks = [...(pagesEl.children[i]?.querySelectorAll('.fr') || [])].map(f => +f.dataset.n);
   $('count').textContent = ks.length ? `${pad(ks[0])}${ks.length > 1 ? '–' + pad(ks[ks.length - 1]) : ''} / ${pad(cur.items.length)}` : '';
-  fCtl.set(n, i, fFresh); fFresh = false;
+  // The dots follow where the page is heading (a glide's target), so a multi-page glide doesn't hop through every page on the way
+  fCtl.set(n, aim(), fFresh); fFresh = false;
   const end = i === n - 1, nx = end && nextOf(), pv = i === 0 && prevOf();
   $('prev').disabled = i === 0 && !pv; $('next').disabled = end && !nx;
   $('prev').setAttribute('aria-label', pv ? (pv.v === 'grid' ? 'All photographs' : `Previous collection: ${COLS[pv.c].title}`) : 'Previous page');
@@ -742,7 +927,13 @@ function syncFocus() {
 }
 let lastI = 0;
 let fSync = 0;
+// Touch: once the finger is up and the page has snapped exactly into place, the dot lands with it
+let touching = false;
+pagesEl.addEventListener('touchstart', () => touching = true, { passive: true });
+pagesEl.addEventListener('touchend', e => touching = e.touches.length > 0, { passive: true });
+pagesEl.addEventListener('touchcancel', () => touching = false, { passive: true });
 pagesEl.addEventListener('scroll', () => {
+  if (coarse && !touching && Math.abs(pagesEl.scrollLeft - idx() * pagesEl.clientWidth) < 1) fCtl.land();
   if (!fSync) fSync = requestAnimationFrame(() => { fSync = 0; syncFocus(); });
   const i = idx(); if (i !== lastI) { zooms.forEach(z => z.zoomed && z.reset()); lastI = i; haptic(4); }
 }, { passive: true });
@@ -804,6 +995,8 @@ function goTo(i, v = 0) {
   const t0 = performance.now();
   pagesEl.style.scrollSnapType = 'none';
   const run = gRun = { i, raf: 0 };
+  // The dot takes off with the glide and lands as it ends
+  fCtl.set(n, i, false, false, T);
   const step = now => {
     if (gRun !== run) return;
     const k = Math.min(1, (now - t0) / T), e = toward ? 1 - Math.pow(1 - k, 3) : k * k * k * (k * (6 * k - 15) + 10);
@@ -906,7 +1099,7 @@ addEventListener('keydown', e => {
 addEventListener('resize', () => {
   if (!phone.matches) setMenu(false);
   if (state.v === 'grid') { hang(); syncGrid(); }
-  if (state.v === 'spread') { stopGlide(); const i = idx(); const same = JSON.stringify(compose(cur, leadOK())) === JSON.stringify(pages); if (!same || leadOK() !== lead) render(); else fit(); pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; synced = -1; syncFocus(); }
+  if (state.v === 'spread') { stopGlide(); const i = idx(); const same = JSON.stringify(compose(cur, !!leadMode())) === JSON.stringify(pages); if (!same || leadMode() !== leadAs) render(); else fit(); pagesEl.scrollLeft = Math.min(i, pagesEl.children.length - 1) * pagesEl.clientWidth; synced = -1; syncFocus(); }
   markTab();
 });
 document.fonts && document.fonts.ready.then(markTab);
