@@ -10,17 +10,16 @@
 <body>
 <header class="bar">
   <strong class="brand">Photo picker</strong>
-  <nav class="crumbs" id="crumbs" aria-label="Folder path"></nav>
+  <span id="root" class="muted mono" title="The photo folder. The picker only reads it."></span>
   <span class="grow"></span>
   <span id="saveState" class="muted"></span>
   <a class="button" href="/photography/" target="_blank" rel="noopener">Open gallery</a>
-  <button id="build" class="primary" title="Make the gallery images and photos.js from the picks">Build gallery</button>
+  <button id="update" class="primary" title="Make the gallery images and photos.js from the chosen photos">Update gallery</button>
 </header>
 
 <div class="app">
-  <aside class="folders" aria-label="Folders">
-    <h2>Folders</h2>
-    <ul id="folderList"></ul>
+  <aside class="tree" aria-label="Folders">
+    <ul id="tree" role="tree"></ul>
   </aside>
 
   <main class="grid-wrap">
@@ -28,10 +27,11 @@
     <ul class="grid" id="grid"></ul>
   </main>
 
-  <aside class="picks" aria-label="Picked photos">
-    <h2>On the site <span id="pickCount" class="muted"></span></h2>
-    <p class="muted small">Drag to change the order. Click a photo in the grid to add it or take it out.</p>
-    <ol id="pickList"></ol>
+  <aside class="side" aria-label="Collections">
+    <h2>Collections</h2>
+    <p class="muted small">Click a photo to add it to the open collection, or to take it out. Drag to change the order.</p>
+    <div id="collections"></div>
+    <button id="addCollection">+ New collection</button>
   </aside>
 </div>
 
@@ -46,10 +46,10 @@
   </div>
 </div>
 
-<dialog id="buildLog">
-  <h2>Build</h2>
-  <pre id="buildText"></pre>
-  <form method="dialog"><button>Close</button></form>
+<dialog id="updateLog">
+  <h2>Update gallery</h2>
+  <pre id="updateText"></pre>
+  <form method="dialog"><button id="updateClose">Close</button></form>
 </dialog>
 
 <script src="picker.js"></script>

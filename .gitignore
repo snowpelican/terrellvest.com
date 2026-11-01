@@ -15,4 +15,5 @@ _src/photography/p
 _src/photography/photos.js
 
 # The photo picker caches its previews here
-tools/picker/.thumbs
+tools/picker/.previews
+_dist/photography/p.new

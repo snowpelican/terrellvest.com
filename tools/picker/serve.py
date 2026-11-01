@@ -1,90 +1,80 @@
 # /// script
-# requires-python = ">=3.11"
-# dependencies = ["pillow"]
+# requires-python = ">=3.11,<3.14"
+# dependencies = ["pillow", "pillow-heif", "rawpy"]
 # ///
-"""Browse a folder of photos, pick the ones for the gallery, and build the gallery from them.
+"""Browse the photo folder and choose the photos for each gallery collection.
 
 Usage: uv run tools/picker/serve.py [--port 8094] [--root PHOTO_FOLDER]
 Then open http://localhost:8094/picker/
-The picks save to tools/picker/selection.json. The Build button runs optimize.py on them
-and copies the result into _dist/photography/. The server answers only this machine.
+The choices save to _src/photography/collections.json as you make them. "Update gallery" runs update_gallery.py.
+The photo folder is read only: this server never moves, copies into, renames or edits anything in it.
+The server answers only this machine.
 """
 import argparse
 import hashlib
 import json
-import shutil
 import subprocess
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from PIL import Image, ImageOps
+from photo_files import is_photo, open_photo, refuse_inside
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 SITE = REPO / '_dist'
-GALLERY = SITE / 'photography'
-OPTIMIZE = REPO / '_src' / 'photography' / 'optimize.py'
-SELECTION = HERE / 'selection.json'
-THUMBS = HERE / '.thumbs'
+COLLECTIONS = REPO / '_src' / 'photography' / 'collections.json'
+UPDATE = HERE / 'update_gallery.py'
+PREVIEWS = HERE / '.previews'
 MOUNT = '/picker'
-IMAGES = ('.jpg', '.jpeg', '.png', '.webp')
-# Lightroom keeps its catalog and previews in folders with these endings; they hold no photos to pick
+# Lightroom keeps its catalog and previews in folders with these endings; they hold no photos to choose
 HIDDEN_ENDINGS = ('.lrdata', '.lrcat-data')
 SIZES = {'thumb': 480, 'large': 2000}
 MAX_BODY = 4 * 1024 * 1024
 ROOT = Path.home() / 'Pictures' / 'Fenrose'
 
 
-def inside_root(rel):
-    """Return the absolute path for a path relative to ROOT, or None if it points outside ROOT."""
-    path = (ROOT / (rel or '')).resolve()
-    return path if path == ROOT or ROOT in path.parents else None
+def inside_root(path):
+    """Return the absolute path for a path in ROOT (absolute or relative), or None if it is outside ROOT."""
+    full = (ROOT / (path or '')).resolve()
+    return full if full == ROOT or ROOT in full.parents else None
 
 
 def list_folder(folder):
-    """List the subfolders and the photos in one folder, sorted by name."""
+    """List the subfolders (relative to ROOT) and the photos (absolute) in one folder, sorted by name."""
     folders, photos = [], []
     for entry in sorted(folder.iterdir(), key=lambda p: p.name.lower()):
         if entry.name.startswith('.') or entry.name.endswith(HIDDEN_ENDINGS):
             continue
         if entry.is_dir():
-            folders.append(entry.name)
-        elif entry.suffix.lower() in IMAGES:
-            photos.append(entry.relative_to(ROOT).as_posix())
-    rel = '' if folder == ROOT else folder.relative_to(ROOT).as_posix()
-    return {'dir': rel, 'folders': folders, 'photos': photos}
+            folders.append(entry.relative_to(ROOT).as_posix())
+        elif is_photo(entry):
+            photos.append(entry.as_posix())
+    return {'folders': folders, 'photos': photos}
 
 
 def preview(photo, size):
-    """Return a cached JPEG of the photo, at most size pixels on its long side."""
+    """Return a JPEG preview of the photo, cached in this repo, at most size pixels on its long side."""
     stamp = f'{photo}|{photo.stat().st_mtime_ns}|{size}'
-    cached = THUMBS / (hashlib.sha1(stamp.encode()).hexdigest() + '.jpg')
+    cached = refuse_inside(PREVIEWS / (hashlib.sha1(stamp.encode()).hexdigest() + '.jpg'), ROOT)
     if not cached.exists():
-        THUMBS.mkdir(exist_ok=True)
-        with Image.open(photo) as img:
-            img.draft('RGB', (size, size))
-            small = ImageOps.exif_transpose(img).convert('RGB')
-            small.thumbnail((size, size), Image.LANCZOS)
-            small.save(cached, quality=82)
+        PREVIEWS.mkdir(exist_ok=True)
+        open_photo(photo, size).save(cached, quality=82)
     return cached.read_bytes()
 
 
-def build():
-    """Run optimize.py on the saved picks and copy its output into the gallery. Return the log text."""
-    run = subprocess.run([sys.executable, str(OPTIMIZE), str(SELECTION)], capture_output=True, text=True)
+def update_gallery():
+    """Run update_gallery.py. Return its output, or raise with it when it fails."""
+    run = subprocess.run([sys.executable, str(UPDATE)], capture_output=True, text=True, cwd=HERE)
+    log = (run.stdout + run.stderr).strip()
     if run.returncode:
-        raise RuntimeError(run.stderr.strip() or run.stdout.strip())
-    made = OPTIMIZE.parent
-    shutil.rmtree(GALLERY / 'p', ignore_errors=True)
-    shutil.copytree(made / 'p', GALLERY / 'p')
-    shutil.copy2(made / 'photos.js', GALLERY / 'photos.js')
-    return run.stdout.strip() + f' copied to {GALLERY}'
+        raise RuntimeError(log)
+    return log
 
 
 class Handler(SimpleHTTPRequestHandler):
-    """Serves /picker/ from this folder, the photo and selection APIs, and every other path from _dist."""
+    """Serves /picker/ from this folder, the photo and collection APIs, and every other path from _dist."""
 
     def translate_path(self, path):
         """Map a URL path to a file in this folder or in _dist."""
@@ -99,37 +89,24 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         url = urlsplit(self.path)
         query = {k: v[0] for k, v in parse_qs(url.query).items()}
-        routes = {'/api/config': self.send_config, '/api/list': self.send_list,
-                  '/api/photo': self.send_photo, '/api/selection': self.send_selection}
+        routes = {'/api/list': self.send_list, '/api/photo': self.send_photo, '/api/collections': self.send_collections}
         if url.path not in routes:
             return super().do_GET()
         try:
             routes[url.path](query)
-        except (OSError, ValueError) as err:
-            self.reply(400, {'error': str(err)})
+        except Exception as err:
+            self.reply(500, {'error': str(err)})
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path == '/api/build':
+        if path == '/api/update':
             try:
-                return self.reply(200, {'log': build()})
-            except (OSError, RuntimeError) as err:
+                return self.reply(200, {'log': update_gallery()})
+            except Exception as err:
                 return self.reply(500, {'error': str(err)})
-        if path != '/api/selection':
+        if path != '/api/collections':
             return self.reply(404, {'error': 'Not found'})
-        size = int(self.headers.get('Content-Length') or 0)
-        if not 0 < size <= MAX_BODY:
-            return self.reply(413, {'error': 'The selection is empty or too large'})
-        try:
-            selection = json.loads(self.rfile.read(size))
-        except json.JSONDecodeError as err:
-            return self.reply(400, {'error': f'Not valid JSON: {err}'})
-        selection['root'] = ROOT.as_posix()
-        SELECTION.write_text(json.dumps(selection, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
-        self.reply(200, {'saved': str(SELECTION)})
-
-    def send_config(self, query):
-        self.reply(200, {'root': str(ROOT)})
+        self.save_collections()
 
     def send_list(self, query):
         folder = inside_root(query.get('dir'))
@@ -139,14 +116,27 @@ class Handler(SimpleHTTPRequestHandler):
 
     def send_photo(self, query):
         photo = inside_root(query.get('path'))
-        size = SIZES.get(query.get('size'), SIZES['thumb'])
-        if not photo or not photo.is_file() or photo.suffix.lower() not in IMAGES:
+        if not photo or not photo.is_file() or not is_photo(photo):
             return self.reply(404, {'error': 'No such photo'})
-        self.reply_bytes(200, 'image/jpeg', preview(photo, size))
+        self.reply_bytes(200, 'image/jpeg', preview(photo, SIZES.get(query.get('size'), SIZES['thumb'])))
 
-    def send_selection(self, query):
-        saved = json.loads(SELECTION.read_text(encoding='utf-8')) if SELECTION.exists() else None
-        self.reply(200, saved)
+    def send_collections(self, query):
+        saved = json.loads(COLLECTIONS.read_text(encoding='utf-8')) if COLLECTIONS.exists() else None
+        self.reply(200, {'root': ROOT.as_posix(), 'saved': saved})
+
+    def save_collections(self):
+        """Write the posted collections to collections.json, with the photo folder recorded as root."""
+        size = int(self.headers.get('Content-Length') or 0)
+        if not 0 < size <= MAX_BODY:
+            return self.reply(413, {'error': 'The collections are empty or too large'})
+        try:
+            body = json.loads(self.rfile.read(size))
+        except json.JSONDecodeError as err:
+            return self.reply(400, {'error': f'Not valid JSON: {err}'})
+        saved = {'root': ROOT.as_posix(), 'collections': body.get('collections', [])}
+        target = refuse_inside(COLLECTIONS, ROOT)
+        target.write_text(json.dumps(saved, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+        self.reply(200, {'saved': str(target)})
 
     def reply(self, status, body):
         """Send a JSON response."""
@@ -163,17 +153,18 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main():
     global ROOT
-    args = argparse.ArgumentParser(description='Pick the photos for the gallery.')
+    args = argparse.ArgumentParser(description='Choose the photos for each gallery collection.')
     args.add_argument('--port', type=int, default=8094)
-    args.add_argument('--root', type=Path, default=ROOT, help='the folder of photos to browse')
+    args.add_argument('--root', type=Path, default=ROOT, help='the photo folder to browse (read only)')
     opts = args.parse_args()
     ROOT = opts.root.resolve()
     if not ROOT.is_dir():
         sys.exit(f'No photo folder at {ROOT}. Give one with --root.')
+    refuse_inside(REPO, ROOT)
     server = ThreadingHTTPServer(('127.0.0.1', opts.port), Handler)
     print(f'Photo picker: http://localhost:{opts.port}{MOUNT}/')
-    print(f'Browsing {ROOT}')
-    print(f'Saves picks to {SELECTION}')
+    print(f'Browsing {ROOT} (read only)')
+    print(f'Saves choices to {COLLECTIONS}')
     server.serve_forever()
 
 
