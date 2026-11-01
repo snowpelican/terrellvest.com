@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Photo Picker</title>
+<link rel="icon" type="image/png" href="/assets/images/site-wide/favicon-logo.png">
+<link rel="stylesheet" href="picker.css">
+</head>
+<body>
+<header class="bar">
+  <strong class="brand">Photo picker</strong>
+  <nav class="crumbs" id="crumbs" aria-label="Folder path"></nav>
+  <span class="grow"></span>
+  <span id="saveState" class="muted"></span>
+  <a class="button" href="/photography/" target="_blank" rel="noopener">Open gallery</a>
+  <button id="build" class="primary" title="Make the gallery images and photos.js from the picks">Build gallery</button>
+</header>
+
+<div class="app">
+  <aside class="folders" aria-label="Folders">
+    <h2>Folders</h2>
+    <ul id="folderList"></ul>
+  </aside>
+
+  <main class="grid-wrap">
+    <p id="gridNote" class="muted"></p>
+    <ul class="grid" id="grid"></ul>
+  </main>
+
+  <aside class="picks" aria-label="Picked photos">
+    <h2>On the site <span id="pickCount" class="muted"></span></h2>
+    <p class="muted small">Drag to change the order. Click a photo in the grid to add it or take it out.</p>
+    <ol id="pickList"></ol>
+  </aside>
+</div>
+
+<div class="viewer" id="viewer" hidden>
+  <img id="viewerImg" alt="">
+  <div class="viewer-bar">
+    <button id="viewerPrev" class="icon" title="Previous photo (←)" aria-label="Previous photo">‹</button>
+    <span id="viewerName"></span>
+    <button id="viewerPick" title="Add or take out (Space)"></button>
+    <button id="viewerNext" class="icon" title="Next photo (→)" aria-label="Next photo">›</button>
+    <button id="viewerClose" class="icon" title="Close (Esc)" aria-label="Close">×</button>
+  </div>
+</div>
+
+<dialog id="buildLog">
+  <h2>Build</h2>
+  <pre id="buildText"></pre>
+  <form method="dialog"><button>Close</button></form>
+</dialog>
+
+<script src="picker.js"></script>
+</body>
+</html>

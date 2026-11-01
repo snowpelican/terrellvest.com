@@ -13,3 +13,6 @@ _src/photography/src
 # optimize.py writes here; the copies in _dist/photography are the ones committed
 _src/photography/p
 _src/photography/photos.js
+
+# The photo picker caches its previews here
+tools/picker/.thumbs
